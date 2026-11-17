@@ -32,8 +32,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
 
       - name: Test
-        # The suite has no dependencies to install: it is plain ES modules run
-        # by the built-in node test runner.
+        # The engine suite stays plain ES modules on Node's test runner.
         run: node --test
