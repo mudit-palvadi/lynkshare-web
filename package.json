@@ -11,7 +11,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "predeploy": "npm run build"
   },
   "dependencies": {
     "qrcode.react": "^4.2.0",

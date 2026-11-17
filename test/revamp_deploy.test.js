@@ -37,6 +37,14 @@ test("the built redirects keep the clean content URLs", () => {
   assert.ok(redirects.includes("/app/send /send 301"));
 });
 
+test("the build ships Digital Asset Links for the Android app", () => {
+  const links = JSON.parse(read(".well-known/assetlinks.json"));
+  assert.equal(links[0].target.package_name, "app.xynix.lynk");
+  assert.equal(links[0].target.sha256_cert_fingerprints.length, 2);
+  // The static build copies .well-known into dist; without it App Links 404.
+  assert.ok(read("vite.config.js").includes(".well-known"));
+});
+
 test("the web repository now carries GPL-3.0", () => {
   const license = read("LICENSE");
   assert.match(license, /GNU GENERAL PUBLIC LICENSE/);
