@@ -7,6 +7,8 @@ export * from "#engine/chunk_collector.js";
 export * from "#engine/chunk_sender.js";
 export * from "#engine/config.js";
 export * from "#engine/crypto.js";
+export * from "./crypto-v2.js";
+export * from "./file-cipher.js";
 export * from "#engine/file_names.js";
 export * from "#engine/framer.js";
 export * from "#engine/history_store.js";
