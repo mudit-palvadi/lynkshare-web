@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Shell } from "./Shell.jsx";
 export { SendScreen } from "./send/SendScreen.jsx";
+export { ShareScreen } from "./receive/ShareScreen.jsx";
 
 export function ReceiveScreen() {
   return (
@@ -27,21 +28,6 @@ export function ReceiveScreen() {
         The other person scans this screen. If they sent a link, open that link
         instead.
       </p>
-    </Shell>
-  );
-}
-
-export function ShareScreen({ transferId }) {
-  return (
-    <Shell eyebrow="Receive" title="Open this link.">
-      <p className="lead">Transfer {transferId}</p>
-      <p className="hint">
-        The download control appears after the key and access token are read
-        from the original link.
-      </p>
-      <button className="primary" type="button" disabled>
-        Save file
-      </button>
     </Shell>
   );
 }
