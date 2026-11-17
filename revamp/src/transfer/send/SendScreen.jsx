@@ -3,26 +3,17 @@ import { QRCodeSVG } from "qrcode.react";
 import {
   HistoryStore,
   LimitExceededError,
-  LynkApi,
-  buildSendLink,
   encryptedSize,
-  encryptWithIvPrefix,
   maxTotalSize,
-  resolveApiBase,
   validateSelection,
 } from "../../engine/index.js";
 import { Shell } from "../Shell.jsx";
+import { createCloudShare } from "./cloud-send.js";
 
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function generateKey() {
-  return Array.from(crypto.getRandomValues(new Uint8Array(16)))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
 }
 
 function formatTime(seconds) {
@@ -79,68 +70,26 @@ export function SendScreen() {
     setProgress(0);
 
     try {
-      const key = generateKey();
-      const encrypted = [];
+      const share = await createCloudShare({
+        files,
+        origin: window.location.origin,
+        onProgress: ({ phase: nextPhase, progress: nextProgress, label: nextLabel }) => {
+          setPhase(nextPhase);
+          setProgress(nextProgress);
+          setLabel(nextLabel);
+        },
+      });
 
-      for (let i = 0; i < files.length; i += 1) {
-        const file = files[i];
-        setLabel(`Encrypting ${file.name}…`);
-        setProgress((i / files.length) * 0.25);
-        const plain = new Uint8Array(await file.arrayBuffer());
-        encrypted.push({
-          name: file.name,
-          blob: await encryptWithIvPrefix(plain, key),
-        });
-      }
-
-      setPhase("uploading");
-      setLabel("Creating the transfer…");
-      const api = new LynkApi({ baseUrl: resolveApiBase() });
-      const session = await api.createTransfer(
-        encrypted.map((item) => ({
-          name: item.name,
-          size: item.blob.length,
-          type: "application/octet-stream",
-        })),
-      );
-
-      for (let i = 0; i < session.files.length; i += 1) {
-        const target = session.files[i];
-        setLabel(`Uploading ${target.fileName}…`);
-        setProgress(0.25 + (i / session.files.length) * 0.75);
-        const response = await fetch(target.uploadUrl, {
-          method: "PUT",
-          body: encrypted[i].blob,
-          headers: { "Content-Type": "application/octet-stream" },
-        });
-        if (!response.ok) throw new Error(`upload failed (${response.status})`);
-        await api.completeFile(
-          session.transferId,
-          target.fileId,
-          session.senderSecret,
-        );
-        setProgress(0.25 + ((i + 1) / session.files.length) * 0.75);
-      }
-
-      const link = buildSendLink(
-        window.location.origin,
-        session.transferId,
-        key,
-        session.accessToken,
-      );
-      setProgress(1);
-      setLabel("Link ready");
-      setPhase("done");
       setResult({
-        link,
-        transferId: session.transferId,
-        expiresIn: session.expiresIn,
+        link: share.link,
+        transferId: share.transferId,
+        expiresIn: share.expiresIn,
       });
       new HistoryStore().add({
-        id: session.transferId,
+        id: share.transferId,
         type: "sent",
-        fileNames: files.map((file) => file.name),
-        totalSize: files.reduce((sum, file) => sum + file.size, 0),
+        fileNames: share.fileNames,
+        totalSize: share.totalSize,
         timestamp: Date.now(),
         status: "completed (cloud)",
       });
