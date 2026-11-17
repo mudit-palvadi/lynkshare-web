@@ -3,6 +3,21 @@ import react from "@vitejs/plugin-react";
 import { copyFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+function transferRoutes() {
+  return {
+    name: "transfer-routes",
+    configureServer(server) {
+      server.middlewares.use((request, _response, next) => {
+        const path = String(request.url ?? "").split("?")[0];
+        if (/^\/(send|receive)(\/|$)/.test(path)) {
+          request.url = "/transfer.html";
+        }
+        next();
+      });
+    },
+  };
+}
+
 function copyBootScript() {
   return {
     name: "copy-boot-script",
@@ -20,7 +35,7 @@ function copyBootScript() {
 export default defineConfig({
   root: "revamp",
   publicDir: "../assets",
-  plugins: [react(), copyBootScript()],
+  plugins: [react(), transferRoutes(), copyBootScript()],
   resolve: {
     alias: {
       "#engine": fileURLToPath(new URL("./js/core", import.meta.url)),
