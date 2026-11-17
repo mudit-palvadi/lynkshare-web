@@ -75,6 +75,7 @@ export function ShareScreen({ transferId }) {
         transferId,
         accessToken: link.accessToken,
         key: link.key,
+        version: link.version,
         save: saveToBrowser,
         onProgress: ({ progress: nextProgress, label: nextLabel }) => {
           setProgress(nextProgress);

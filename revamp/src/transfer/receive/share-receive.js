@@ -1,5 +1,5 @@
 import {
-  decryptWithIvPrefix,
+  decryptFileBytes,
   safeFileName,
 } from "../../engine/index.js";
 
@@ -16,6 +16,7 @@ export async function downloadShare({
   transferId,
   accessToken,
   key,
+  version = 1,
   fetch = globalThis.fetch.bind(globalThis),
   save,
   onProgress = () => {},
@@ -34,7 +35,7 @@ export async function downloadShare({
       throw new Error(`download failed (${response.status})`);
     }
     const packed = new Uint8Array(await response.arrayBuffer());
-    const plain = await decryptWithIvPrefix(packed, key);
+    const plain = await decryptFileBytes({ version, key, packed });
     const name = safeFileName(file.fileName);
     await save({ name, bytes: plain });
     saved.push(name);
