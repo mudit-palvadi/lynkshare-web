@@ -21,6 +21,7 @@ test("the revamp has separate marketing and transfer entries", () => {
 
   assert.ok(read("vite.config.js").includes("marketing"));
   assert.ok(read("vite.config.js").includes("transfer"));
+  assert.ok(read("vite.config.js").includes("transferRoutes"));
 });
 
 test("the transfer entry has no ad script", () => {

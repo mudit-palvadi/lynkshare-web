@@ -177,8 +177,11 @@ export function SendScreen() {
           addFiles(event.dataTransfer.files);
         }}
       >
-        <label htmlFor="send-files">Choose files</label>
+        <label className="file-picker" htmlFor="send-files">
+          Choose files
+        </label>
         <input
+          className="file-input"
           id="send-files"
           type="file"
           multiple
