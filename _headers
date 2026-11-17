@@ -1,4 +1,6 @@
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Permissions-Policy: camera=(self), microphone=(), geolocation=()
   Content-Security-Policy: default-src 'self'; script-src 'self' https://pagead2.googlesyndication.com https://*.googlesyndication.com https://static.cloudflareinsights.com https://*.adtrafficquality.google; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.lynkshare.app wss://api.lynkshare.app https://*.r2.cloudflarestorage.com https://*.googlesyndication.com https://*.doubleclick.net https://cloudflareinsights.com https://*.adtrafficquality.google; frame-src https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.adtrafficquality.google; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'

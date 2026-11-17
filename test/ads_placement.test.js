@@ -85,6 +85,16 @@ test("the security headers are set, and scripts stay strict", () => {
 
   assert.ok(headers.includes("X-Content-Type-Options: nosniff"));
   assert.ok(headers.includes("Referrer-Policy: no-referrer"));
+  assert.ok(
+    headers.includes(
+      "Strict-Transport-Security: max-age=31536000; includeSubDomains",
+    ),
+  );
+  assert.ok(
+    headers.includes(
+      "Permissions-Policy: camera=(self), microphone=(), geolocation=()",
+    ),
+  );
 
   const csp = headers.split("Content-Security-Policy:")[1] ?? "";
   assert.ok(csp.includes("script-src 'self'"), "no script-src in the CSP");
