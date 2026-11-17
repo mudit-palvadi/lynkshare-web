@@ -29,6 +29,8 @@ test("the deployed headers keep the site on HTTPS and the key realm strict", () 
 
 test("the built redirects keep the clean content URLs", () => {
   const redirects = read("revamp/_redirects");
+  assert.ok(redirects.includes("/ /index.html 200"));
+  assert.ok(redirects.includes("/index.html / 301"));
   assert.ok(redirects.includes("/about /about.html 200"));
   assert.ok(redirects.includes("/faq /faq.html 200"));
   assert.ok(redirects.includes("/guides/web-vs-app-limits /guides/web-vs-app-limits.html 200"));
