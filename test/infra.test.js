@@ -8,8 +8,10 @@ const webRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 test("app-ads.txt publishes the AdMob seller record separately from ads.txt", () => {
   const seller = "google.com, pub-9472143004063972, DIRECT, f08c47fec0942fa0\n";
-  assert.equal(readFileSync(join(webRoot, "app-ads.txt"), "utf8"), seller);
-  assert.equal(readFileSync(join(webRoot, "ads.txt"), "utf8"), seller);
+  const readText = (name) =>
+    readFileSync(join(webRoot, name), "utf8").replace(/\r\n/g, "\n");
+  assert.equal(readText("app-ads.txt"), seller);
+  assert.equal(readText("ads.txt"), seller);
 });
 
 test("assetlinks.json binds only the upload and Play signing certificates", () => {
