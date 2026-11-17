@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About LynkShare</title>
+    <meta name="description" content="LynkShare is a no-account file transfer service for phones, laptops and tablets. Learn why it exists and how it handles encryption, limits and privacy." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://lynkshare.app/about" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://lynkshare.app/about" />
+    <meta property="og:title" content="About LynkShare" />
+    <meta property="og:description" content="A no-account file transfer service for phones, laptops and tablets." />
+    <meta property="og:image" content="https://lynkshare.app/icons/icon-512.png" />
+    <meta property="og:site_name" content="LynkShare" />
+    <meta name="theme-color" content="#09090b" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <!-- SITE_HEADER -->
+    <main class="marketing content-page">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a><span>/</span><span>About</span>
+      </nav>
+      <article class="article">
+        <p class="eyebrow">About</p>
+        <h1>File transfer without the account.</h1>
+        <p class="lead">
+          LynkShare moves a file from one device to another without asking either
+          person to create an account. The Android app and the browser receiver
+          are two clients for the same encrypted transfer.
+        </p>
+
+        <h2>Why it exists</h2>
+        <p>
+          Sending one file should not require a sign-up form, a subscription, or
+          installing the same app on every device. It also should not require
+          uploading a readable copy to a server that can inspect it.
+        </p>
+        <p>
+          LynkShare encrypts the file on the sending device. The key travels in
+          the link fragment, not to the server. The service coordinates the
+          transfer and stores ciphertext when a cloud session is used, but it
+          does not receive the file key.
+        </p>
+
+        <h2>Cross-device by design</h2>
+        <p>
+          The same flow works between a phone and a laptop, two laptops, two
+          phones, or a tablet and a computer. The sender can use the Android app
+          or the web sender. The receiver can open the link in a browser or use
+          the Android app.
+        </p>
+        <div class="notice">
+          There is no iOS app. iPhone and iPad users receive in Safari or Chrome
+          through the web version, with the 10 MB web limit.
+        </div>
+
+        <h2>What LynkShare is not</h2>
+        <ul>
+          <li>It is not a backup service. Links and cloud sessions expire.</li>
+          <li>It is not anonymous. The service processes metadata and network addresses.</li>
+          <li>It is not a guarantee that an untrusted file is safe to open.</li>
+          <li>It is not a promise that a direct connection always works; cloud fallback exists for a reason.</li>
+        </ul>
+
+        <h2>Source and support</h2>
+        <p>
+          The Android app is released under GPL-3.0. The website source is
+          publicly available. The project repository links the mobile, backend
+          and web components.
+        </p>
+        <div class="project-links">
+          <a href="https://github.com/mudit-palvadi/LynkShare">Project repository</a>
+          <a href="https://github.com/mudit-palvadi/lynkshare-web/issues">Website issues</a>
+          <a href="https://github.com/mudit-palvadi/lynkshare-mobile/issues">Android issues</a>
+          <a href="https://github.com/mudit-palvadi/lynkshare-mobile/blob/main/SECURITY.md">Security policy</a>
+        </div>
+      </article>
+    </main>
+    <!-- SITE_FOOTER -->
+  </body>
+</html>
