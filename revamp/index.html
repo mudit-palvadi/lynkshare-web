@@ -3,13 +3,77 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LynkShare</title>
+    <title>LynkShare — No-account encrypted file sharing</title>
     <meta
       name="description"
       content="No-account file sharing with client-side encryption. Send directly or through an encrypted cloud session."
     />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://lynkshare.app/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://lynkshare.app/" />
+    <meta property="og:title" content="LynkShare — No-account encrypted file sharing" />
+    <meta
+      property="og:description"
+      content="Send a file without an account. Client-side encryption, direct transfer, and an encrypted cloud fallback."
+    />
+    <meta property="og:image" content="https://lynkshare.app/icons/icon-512.png" />
+    <meta property="og:site_name" content="LynkShare" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="LynkShare — No-account encrypted file sharing" />
+    <meta
+      name="twitter:description"
+      content="Send a file without an account. Client-side encryption, direct transfer, and an encrypted cloud fallback."
+    />
+    <meta name="twitter:image" content="https://lynkshare.app/icons/icon-512.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "LynkShare",
+        "url": "https://lynkshare.app/",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Web, Android",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "No-account file transfer with client-side encryption, direct transfer and an encrypted cloud fallback."
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How do I send from my phone to a laptop without an account?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Open Send on the phone, choose the files, then share the link or code. On the laptop, open the link or enter the code."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Where does the key go?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The key is created in the browser and stays in the link fragment. It is not stored by the service."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is the web size limit?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "10 MB total per transfer, with at most 10 files."
+            }
+          }
+        ]
+      }
+    </script>
     <meta name="theme-color" content="#09090b" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
   </head>
