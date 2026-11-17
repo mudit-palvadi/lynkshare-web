@@ -11,6 +11,9 @@ test("Wrangler points the existing lynk-web Worker at dist", () => {
   const config = JSON.parse(read("wrangler.jsonc"));
   assert.equal(config.name, "lynk-web");
   assert.equal(config.assets.directory, "./dist");
+  // Rewriting /about to /about.html would loop if Workers also canonicalizes
+  // /about.html back to /about, so HTML handling stays off.
+  assert.equal(config.assets.html_handling, "none");
 });
 
 test("the deployed headers keep the site on HTTPS and the key realm strict", () => {
