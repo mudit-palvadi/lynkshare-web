@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LynkShare FAQ</title>
+    <meta name="description" content="Answers about LynkShare: accounts, devices, iOS, Cloud vs Direct, sender and receiver QR, limits, expiry, encryption, metadata and cost." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://lynkshare.app/faq" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://lynkshare.app/faq" />
+    <meta property="og:title" content="LynkShare FAQ" />
+    <meta property="og:description" content="Account, device, Cloud, Direct, QR, limit, encryption and cost questions." />
+    <meta property="og:image" content="https://lynkshare.app/icons/icon-512.png" />
+    <meta property="og:site_name" content="LynkShare" />
+    <meta name="theme-color" content="#09090b" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <!-- SITE_HEADER -->
+    <main class="marketing content-page">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a><span>/</span><span>FAQ</span>
+      </nav>
+      <article class="article">
+        <p class="eyebrow">FAQ</p>
+        <h1>Questions people ask before sending.</h1>
+
+        <div class="faq-list">
+          <section class="faq-item">
+            <h2>What is LynkShare?</h2>
+            <p>
+              LynkShare sends a file from one device to another without an
+              account. The sender picks files, chooses Cloud or Direct, and
+              shares a link or QR code. The receiver opens the link or scans the
+              code, then saves the file.
+            </p>
+          </section>
+
+          <section class="faq-item">
+            <h2>Do I need an account or an app?</h2>
+            <p>
+              No account is required. The Android app is optional; the receiver
+              can use the browser. The sender can also use the web sender. iPhone
+              and iPad users use the browser because there is no iOS app.
+            </p>
+          </section>
+
+          <section class="faq-item">
+            <h2>Which devices does it work on?</h2>
+            <p>
+              Android, Windows, macOS, Linux, Chromebooks, iPhones, iPads and
+              other devices with a modern browser. Android users can install the
+              app; everyone else can use the web. There is no iOS app.
+            </p>
+          </section>
+
+          <section class="faq-item">
+            <h2>How do I send a file?</h2>
+            <p>
+              Pick your files, choose Cloud or Direct, then share the link or QR
+              code. For a remote recipient, send the link. For someone in the
+              same room, let them scan your sender QR.
+            </p>
+          </section>
+
+          <section class="faq-item">
+            <h2>How do I receive a file?</h2>
+            <p>
+              Open the link the sender shared, or scan the sender's QR with a
+              camera. If the sender asks you to show a receiving QR, display it
+              on your screen and let them scan it.
+            </p>
+          </section>
+
+          <section class="faq-item">
+            <h2>What is the difference between the sender QR and the receiver QR?</h2>
+            <p>
+              A sender QR is shown by the person sending; the receiver scans it
+              or opens the link. A receiver QR is shown by the person receiving;
+              the sender scans it to send to that waiting device. Use sender QR
+              for remote links and normal sending, and receiver QR for an
+              in-person “send to this device” flow.
+            </p>
+          </section>
+
+          <section class="faq-item">
+            <h2>Cloud vs Direct: which should I use?</h2>
+            <p>
+              Use Cloud when the recipient may open the link later, or when a
+              direct connection is blocked. Use Direct when both devices are
+              online and you want the shortest path. If Direct fails, LynkShare
+              can continue with the encrypted Cloud copy.
+            </p>
+          </section>
+
+          <section class="faq-item">
+            <h2>Do both devices need to be online?</h2>
+            <p>
+              For Direct, yes. Both devices must be online at the same time. For
+              Cloud, the sender uploads first and the recipient can open the link
+              later while the session is active.
+            </p>
+          </section>
+
+          <section class="faq-item">
+            <h2>Can I send to more than one person?</h2>
+            <p>
+              A Cloud link can be opened by more than one recipient while the
+              session is active. A Direct transfer is one-to-one.
+            </p>
+          </section>
+
+          <section class="faq-item">
+            <h2>What are the file and size limits?</h2>
+            <p>
+              The web limit is 10 MB total per transfer. The Android app allows
+              15 MB Cloud and 20 MB Direct on the standard tier, or 30 MB Cloud
+              and 50 MB Direct after the in-app unlock. A transfer can contain up
+              to 10 files, and the service ceiling is 50 MB.
+            </p>
+          </section>
+
+          <section class="faq-item">
+            <h2>How long does a transfer last?</h2>
+            <p>
+              A transfer normally lasts 10 minutes. The Android app can extend it
+              to 30 minutes. After it expires, ask the sender for a fresh link.
+            </p>
+          </section>
+
+          <section class="faq-item">
+            <h2>Can I send multiple files or folders?</h2>
+            <p>
+              You can select up to 10 files in one transfer. Folders are not
+              supported; choose the files inside the folder instead.
+            </p>
+          </section>
+
+          <section class="faq-item">
+            <h2>Why is my link missing its key or expired?</h2>
+            <p>
+              The file key lives in the original link fragment and is not stored
+              by the site. A reload needs the original link. If the session has
+              expired, ask the sender for a new link. Do not paste a complete
+              link into a public page.
+            </p>
+          </section>
+
+          <section class="faq-item">
+            <h2>Is my file encrypted?</h2>
+            <p>
+              Yes. Files are encrypted on the sending device before they leave
+              it. The file key stays in the link fragment and is not sent to the
+              server. Cloud storage receives ciphertext only.
+            </p>
+          </section>
+
+          <section class="faq-item">
+            <h2>Can LynkShare see my files?</h2>
+            <p>
+              LynkShare cannot read your file contents. It stores ciphertext and
+              session metadata such as file names, sizes and network addresses.
+              Session metadata expires with the transfer, normally within 10 to
+              30 minutes, and all remaining transfer data, including metadata, is
+              deleted within 24 hours.
+            </p>
+          </section>
+
+          <section class="faq-item">
+            <h2>Is LynkShare free?</h2>
+            <p>
+              Yes — LynkShare is completely free. There is no account,
+              subscription or payment. The Android app contains ads to handle
+              infrastructure costs, but the service itself is free to use.
+            </p>
+          </section>
+        </div>
+
+        <div class="notice">
+          LynkShare is a public project. The Android app is GPL-3.0 and the
+          website source is publicly available.
+        </div>
+        <div class="project-links">
+          <a href="https://github.com/mudit-palvadi/LynkShare">Project repository</a>
+          <a href="https://github.com/mudit-palvadi/lynkshare-web/issues">Website issues</a>
+          <a href="https://github.com/mudit-palvadi/lynkshare-mobile/issues">Android issues</a>
+          <a href="https://github.com/mudit-palvadi/lynkshare-mobile/blob/main/SECURITY.md">Security policy</a>
+        </div>
+      </article>
+    </main>
+    <!-- SITE_FOOTER -->
+  </body>
+</html>

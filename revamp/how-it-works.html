@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>How LynkShare works</title>
+    <meta name="description" content="How LynkShare sends files across devices: Cloud and Direct transfer, sender and receiver QR flows, encryption, limits, expiry and metadata." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://lynkshare.app/how-it-works" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://lynkshare.app/how-it-works" />
+    <meta property="og:title" content="How LynkShare works" />
+    <meta property="og:description" content="Cloud, Direct, sender QR, receiver QR, encryption and limits explained." />
+    <meta property="og:image" content="https://lynkshare.app/icons/icon-512.png" />
+    <meta property="og:site_name" content="LynkShare" />
+    <meta name="theme-color" content="#09090b" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <!-- SITE_HEADER -->
+    <main class="marketing content-page">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a><span>/</span><span>How it works</span>
+      </nav>
+      <article class="article">
+        <p class="eyebrow">How it works</p>
+        <h1>One file, two devices, no account.</h1>
+        <p class="lead">
+          LynkShare is a cross-device file transfer service. It works between a
+          phone and a laptop, two laptops, two phones, or a tablet and a
+          computer. The sender can use the Android app or the web sender; the
+          receiver can open a link in a browser or use the Android app.
+        </p>
+
+        <div class="notice">
+          There is no iOS app. On iPhone and iPad, LynkShare works through the
+          browser receiver in Safari or Chrome, with the 10 MB web limit.
+        </div>
+
+        <h2>Cloud or Direct</h2>
+        <p>
+          The sender chooses how the file should travel. The right choice depends
+          on whether both people are online at the same time and how much of the
+          transfer path should be handled by LynkShare.
+        </p>
+        <table>
+          <thead>
+            <tr><th>Cloud</th><th>Direct</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>The encrypted file is stored temporarily so the recipient can open the link later during the session.</td>
+              <td>The two devices connect to each other and the file is streamed over the direct channel.</td>
+            </tr>
+            <tr>
+              <td>Best when the recipient is not ready yet, or when a direct connection is blocked.</td>
+              <td>Best when both people are online and want the shortest path without a stored file copy.</td>
+            </tr>
+            <tr>
+              <td>The web limit applies: 10 MB total per transfer.</td>
+              <td>The app supports the larger Direct limit; the web remains at 10 MB.</td>
+            </tr>
+            <tr>
+              <td>The service stores ciphertext and session metadata until expiry or cleanup.</td>
+              <td>If the connection fails, LynkShare can continue with the encrypted Cloud copy.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>Sender QR and Receiver QR</h2>
+        <p>
+          The two QR directions are the main LynkShare experience. They answer a
+          simple question: who is holding the device that needs to be scanned?
+        </p>
+        <h3>Sender QR</h3>
+        <p>
+          The sender picks the files, chooses Cloud or Direct, and shows a QR
+          code or shares the link. The receiver scans the sender's QR or opens
+          the link. This is the usual flow when the sender starts the transfer.
+          The link can also be sent remotely, so the receiver does not have to be
+          in the same room.
+        </p>
+        <h3>Receiver QR</h3>
+        <p>
+          The receiver opens the receiving screen and shows a QR code. The sender
+          scans that QR from the Android app, which tells LynkShare which device
+          is waiting. The sender then sends the file to that device. This is the
+          in-person flow for “send to this phone or laptop.” The receiving-QR
+          path uses Cloud delivery.
+        </p>
+        <p>
+          Use Sender QR when the sender is starting the transfer or the link needs
+          to be shared remotely. Use Receiver QR when the receiver is already
+          waiting and the sender can scan the screen in front of them.
+        </p>
+
+        <h2>Encryption and the link key</h2>
+        <p>
+          Files are encrypted on the sender's device before they leave it. The
+          file key is generated on the device and stays in the link fragment.
+          Browsers do not send the fragment to the server, and LynkShare does not
+          store it. The server receives ciphertext, not plaintext.
+        </p>
+        <p>
+          A share link is a capability: anyone who has the complete link can
+          attempt to open the transfer. Treat a complete link, QR image, or code
+          as sensitive. The service does not receive the file key, but it does
+          process metadata.
+        </p>
+
+        <h2>What the server stores</h2>
+        <ul>
+          <li>File names, sizes and content types for the session.</li>
+          <li>Transfer and receiver-session identifiers and status.</li>
+          <li>Network addresses used to make the service work and limit abuse.</li>
+          <li>Encrypted file bytes when Cloud delivery is used.</li>
+        </ul>
+        <p>
+          Session metadata expires with the transfer, normally within 10 to 30
+          minutes. Encrypted Cloud objects are deleted by the bucket lifecycle
+          within 24 hours, and cancelling a transfer removes its objects
+          immediately. Local history stays on the device and can be cleared.
+        </p>
+
+        <h2>Limits and expiry</h2>
+        <p>
+          The web sender allows up to 10 MB total per transfer, with at most 10
+          files. The Android app allows 15 MB Cloud and 20 MB Direct on the
+          standard tier, and 30 MB Cloud and 50 MB Direct after the in-app
+          unlock. The service ceiling is 50 MB per transfer.
+        </p>
+        <p>
+          A transfer normally lasts 10 minutes. The Android app can extend the
+          session to 30 minutes when the sender secret is available. A reload
+          needs the original link because the key is not stored by the site.
+        </p>
+
+        <h2>Privacy limits</h2>
+        <ul>
+          <li>Encryption does not make the service anonymous.</li>
+          <li>Direct connections can expose network addresses to the other peer and the connection service.</li>
+          <li>A TURN relay can observe connection metadata, not plaintext file contents.</li>
+          <li>Cloud storage keeps encrypted objects for the cleanup window, even after the download session ends.</li>
+        </ul>
+        <p>
+          For private vulnerability reporting, use the
+          <a href="https://github.com/mudit-palvadi/lynkshare-mobile/blob/main/SECURITY.md">LynkShare security policy</a>.
+        </p>
+
+        <h2>Where to go next</h2>
+        <p>
+          <a href="/guides/direct-vs-cloud">Compare Direct and Cloud</a>,
+          <a href="/guides/sender-qr-vs-receiver-qr">choose a QR flow</a>, or
+          <a href="/faq">read the FAQ</a>.
+        </p>
+      </article>
+    </main>
+    <!-- SITE_FOOTER -->
+  </body>
+</html>

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy Policy | LynkShare</title>
+    <meta name="description" content="How LynkShare handles files, metadata, local history, advertising and deletion for the Android app and website." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://lynkshare.app/privacy" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://lynkshare.app/privacy" />
+    <meta property="og:title" content="Privacy Policy | LynkShare" />
+    <meta property="og:description" content="How LynkShare handles files, metadata, local history, advertising and deletion." />
+    <meta property="og:image" content="https://lynkshare.app/icons/icon-512.png" />
+    <meta property="og:site_name" content="LynkShare" />
+    <meta name="theme-color" content="#09090b" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <!-- SITE_HEADER -->
+    <main class="marketing content-page">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a><span>/</span><span>Privacy</span>
+      </nav>
+      <article class="article">
+        <p class="eyebrow">Privacy</p>
+        <h1>Privacy Policy</h1>
+        <p class="hint">Effective 18 November 2026 · Data controller: Xynix</p>
+
+        <p>
+          This policy covers the LynkShare website and the LynkShare Android app
+          (package <code>app.xynix.lynk</code>). LynkShare has no accounts, so
+          there is no profile to create, sell or delete. The service is designed
+          to move encrypted files without receiving the file key.
+        </p>
+
+        <h2>1. Summary</h2>
+        <ul>
+          <li>No account, name, email address or phone number is required.</li>
+          <li>Files are encrypted on the sender's device before they leave it.</li>
+          <li>The file key stays in the link fragment and is not sent to the server.</li>
+          <li>Session metadata is short-lived and is deleted automatically.</li>
+          <li>Encrypted Cloud objects are deleted by the bucket lifecycle within 24 hours.</li>
+          <li>The Android app uses Google AdMob; ad data is handled by Google as described below.</li>
+        </ul>
+
+        <h2>2. What we do not collect</h2>
+        <ul>
+          <li>Account registrations, usernames, passwords, email addresses or phone numbers.</li>
+          <li>Contacts, photos or files except the files you explicitly choose to send.</li>
+          <li>Precise location data.</li>
+          <li>File contents in readable form or the file-decryption key.</li>
+        </ul>
+
+        <h2>3. Files you transfer</h2>
+        <p>
+          Files are encrypted on the sending device. When Cloud delivery is used,
+          the encrypted bytes are stored in Cloudflare R2. When Direct is used,
+          the encrypted bytes travel over the direct connection and can fall back
+          to the encrypted Cloud copy if the connection fails.
+        </p>
+        <p>
+          A transfer can normally be downloaded for 10 minutes, or 30 minutes
+          after an extension. Encrypted objects are removed by the bucket
+          lifecycle within 24 hours, and cancelling a transfer removes its
+          objects immediately. After the download window closes, the link no
+          longer provides access.
+        </p>
+
+        <h2>4. Transfer metadata</h2>
+        <p>To operate a transfer, the backend processes:</p>
+        <ul>
+          <li>A random transfer or receiver-session identifier.</li>
+          <li>File names, sizes and content types for the files you choose.</li>
+          <li>Timestamps and session status needed for expiry and cancellation.</li>
+          <li>IP address and network information needed to serve the request and limit abuse.</li>
+        </ul>
+        <p>
+          Session metadata is stored in Redis with a time-to-live and is deleted
+          automatically, normally within 10 to 30 minutes. It is not used to build
+          advertising profiles. Remaining transfer data, including metadata, is
+          deleted within 24 hours.
+        </p>
+
+        <h2>5. Data stored on your device</h2>
+        <ul>
+          <li>Recent transfer history: names, sizes, timestamps and local paths.</li>
+          <li>Appearance and onboarding preferences.</li>
+          <li>The website keeps recent activity in the current tab's session storage.</li>
+        </ul>
+        <p>
+          Web history never stores the key, the complete link or the wrapped key.
+          App history can be cleared from the app, and uninstalling removes local
+          data.
+        </p>
+
+        <h2>6. Advertising</h2>
+        <p>
+          The Android app displays ads through Google AdMob. Google may process
+          device identifiers, approximate location derived from IP, device
+          characteristics, and ad interaction data to serve and measure ads. The
+          app uses Google's consent tools where required and exposes privacy
+          options when Google says they are required.
+        </p>
+        <p>
+          If ads are enabled on the website, they are served by Google AdSense.
+          Google's handling of ad data is described at
+          <a href="https://policies.google.com/technologies/partner-sites">policies.google.com/technologies/partner-sites</a>.
+          You can limit ad personalization in your Google account or device
+          settings; ads may still appear.
+        </p>
+
+        <h2>7. Permissions</h2>
+        <ul>
+          <li><strong>Camera:</strong> used to scan QR codes. LynkShare does not take or store photos from the camera.</li>
+          <li><strong>Internet and network state:</strong> required to transfer files and fetch session data.</li>
+          <li><strong>File access:</strong> used when you choose files to send or save received files.</li>
+        </ul>
+        <p>
+          Permissions are requested when the related feature is used and can be
+          revoked in device settings.
+        </p>
+
+        <h2>8. Third parties</h2>
+        <ul>
+          <li>Cloudflare R2 for encrypted Cloud objects.</li>
+          <li>Cloudflare and the hosting provider for network delivery and security.</li>
+          <li>A TURN relay when a direct connection needs one; it carries encrypted traffic and sees connection metadata, not plaintext.</li>
+          <li>Google AdMob and Google Play for the Android app.</li>
+        </ul>
+
+        <h2>9. Retention</h2>
+        <ul>
+          <li>Session metadata: normally 10 to 30 minutes; at most 24 hours.</li>
+          <li>Encrypted Cloud objects: within 24 hours, or immediately on cancel.</li>
+          <li>Local history and preferences: until you clear them or uninstall the app.</li>
+          <li>Server logs: retained only as needed for security, abuse prevention and legal obligations.</li>
+        </ul>
+
+        <h2>10. Your choices</h2>
+        <ul>
+          <li>Do not share a complete link, QR image or code with people you do not trust.</li>
+          <li>Clear recent activity in the app or the website tab.</li>
+          <li>Use the app's ad privacy options when required.</li>
+          <li>Ask the sender for a new link after a session expires.</li>
+        </ul>
+
+        <h2>11. Children</h2>
+        <p>
+          LynkShare is not directed at children under 13, and the service does not
+          knowingly collect personal information from children. Because there are
+          no accounts, there is no child profile to maintain.
+        </p>
+
+        <h2>12. Changes and contact</h2>
+        <p>
+          If this policy changes, the effective date on this page will be
+          updated. For privacy questions, contact
+          <a href="mailto:dev.muditp@gmail.com">dev.muditp@gmail.com</a>. For
+          security reports, use the
+          <a href="https://github.com/mudit-palvadi/lynkshare-mobile/blob/main/SECURITY.md">security policy</a>.
+        </p>
+      </article>
+    </main>
+    <!-- SITE_FOOTER -->
+  </body>
+</html>
