@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expired or missing LynkShare link: what to do | LynkShare</title>
+    <meta name="description" content="Why a LynkShare link expires or says it is missing its key, why a reload needs the original link, and when to ask the sender for a new one." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://lynkshare.app/guides/expired-link" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://lynkshare.app/guides/expired-link" />
+    <meta property="og:title" content="Expired or missing LynkShare link" />
+    <meta property="og:description" content="Why a link expires or loses its key, and how to recover." />
+    <meta property="og:image" content="https://lynkshare.app/icons/icon-512.png" />
+    <meta property="og:site_name" content="LynkShare" />
+    <meta name="theme-color" content="#09090b" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <!-- SITE_HEADER -->
+    <main class="marketing content-page">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a><span>/</span><a href="/guides">Guides</a><span>/</span><span>Expired link</span>
+      </nav>
+      <article class="article">
+        <p class="eyebrow">Troubleshooting</p>
+        <h1>Expired or missing link.</h1>
+        <p class="lead">
+          LynkShare links are short-lived by design. A link can also look broken
+          when its key is missing. The fix is usually the same: open the original
+          link or ask the sender for a fresh one.
+        </p>
+
+        <h2>“This link is missing its key”</h2>
+        <p>
+          The file key lives in the part of the link after the <code>#</code>
+          symbol. Browsers do not send that fragment to the server, and LynkShare
+          does not store it. If the fragment was lost by copying only part of the
+          URL, opening the page from browser history, or reloading a page after
+          the fragment was scrubbed, the site cannot recover the key.
+        </p>
+        <p>
+          Open the original complete link. If you do not have it, ask the sender
+          to share it again.
+        </p>
+
+        <h2>“This transfer has expired”</h2>
+        <p>
+          A transfer normally lasts 10 minutes. The Android app can extend the
+          session to 30 minutes. When the session ends, the link no longer
+          provides access, even if encrypted objects have not yet been cleaned up
+          by the storage lifecycle.
+        </p>
+        <p>
+          Ask the sender to create a new transfer. A new link gets a new key and a
+          new session; the old link cannot be revived.
+        </p>
+
+        <h2>Why a reload needs the original link</h2>
+        <p>
+          The key is deliberately not written to local storage or a session store.
+          That protects it from later scripts and from a browser restart, but it
+          also means a reload cannot restore it. Keep the original link until the
+          transfer is finished.
+        </p>
+
+        <h2>What not to do</h2>
+        <ul>
+          <li>Do not paste a complete link into a public issue or chat.</li>
+          <li>Do not upload the link to a URL shortener; the fragment is the key.</li>
+          <li>Do not retry a missing-key page repeatedly; it cannot reconstruct the key.</li>
+          <li>Do not assume the sender can recover a link they did not keep.</li>
+        </ul>
+
+        <h2>Cloud cleanup is not the same as session expiry</h2>
+        <p>
+          The download window and the storage cleanup are separate. A session may
+          end after 10 or 30 minutes while the encrypted object waits for the
+          bucket lifecycle, which removes it within 24 hours. Once the session has
+          expired, the link no longer authorizes a download.
+        </p>
+
+        <p>
+          Next: <a href="/guides/direct-vs-cloud">choose a mode</a> or
+          <a href="/faq">read the FAQ</a>.
+        </p>
+      </article>
+    </main>
+    <!-- SITE_FOOTER -->
+  </body>
+</html>

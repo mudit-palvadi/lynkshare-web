@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Direct vs Cloud transfer: which should I use? | LynkShare</title>
+    <meta name="description" content="Compare LynkShare Direct and Cloud transfer: speed, privacy, limits, offline recipients and what happens when a direct connection fails." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://lynkshare.app/guides/direct-vs-cloud" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://lynkshare.app/guides/direct-vs-cloud" />
+    <meta property="og:title" content="Direct vs Cloud transfer: which should I use?" />
+    <meta property="og:description" content="A practical comparison of LynkShare Direct and Cloud transfer." />
+    <meta property="og:image" content="https://lynkshare.app/icons/icon-512.png" />
+    <meta property="og:site_name" content="LynkShare" />
+    <meta name="theme-color" content="#09090b" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <!-- SITE_HEADER -->
+    <main class="marketing content-page">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a><span>/</span><a href="/guides">Guides</a><span>/</span><span>Direct vs Cloud</span>
+      </nav>
+      <article class="article">
+        <p class="eyebrow">Choosing a mode</p>
+        <h1>Direct vs Cloud transfer: which should I use?</h1>
+        <p class="lead">
+          Both modes send the same encrypted file. The difference is where the
+          encrypted bytes wait and whether both people need to be online at the
+          same time.
+        </p>
+
+        <h2>The short answer</h2>
+        <table>
+          <thead><tr><th>Situation</th><th>Use</th></tr></thead>
+          <tbody>
+            <tr><td>Both people are online now</td><td>Direct, for the shortest path</td></tr>
+            <tr><td>The recipient will open the link later</td><td>Cloud</td></tr>
+            <tr><td>Safari/iOS receiver</td><td>Cloud is usually the reliable path</td></tr>
+            <tr><td>Large file on Android</td><td>Direct if both are online; otherwise Cloud</td></tr>
+            <tr><td>Restrictive network or firewall</td><td>Cloud, or let Direct fall back</td></tr>
+          </tbody>
+        </table>
+
+        <h2>How Direct works</h2>
+        <p>
+          Direct tries to connect the two devices and stream the encrypted file
+          between them. Both devices must be online, and the network must allow a
+          peer-to-peer path. If the connection cannot open, LynkShare can continue
+          with the encrypted Cloud copy instead of making you start again.
+        </p>
+        <p>
+          Direct is best when both people are ready at the same time. It avoids
+          storing a cloud copy for the transfer, but the connection can still
+          expose network addresses to the other peer and the connection service.
+        </p>
+
+        <h2>How Cloud works</h2>
+        <p>
+          Cloud encrypts the file, uploads the ciphertext, and lets the recipient
+          open the link during the session. The sender can finish before the
+          recipient is ready. The encrypted object is stored temporarily and is
+          deleted by the bucket lifecycle within 24 hours, or immediately when the
+          transfer is cancelled.
+        </p>
+        <p>
+          Cloud is the right choice for remote recipients, delayed opening,
+          browser-only receivers, and networks that block direct connections. The
+          web limit is 10 MB total per transfer.
+        </p>
+
+        <h2>Limits</h2>
+        <p>
+          The web sender allows 10 MB total per transfer. The Android app allows
+          15 MB Cloud and 20 MB Direct on the standard tier, or 30 MB Cloud and
+          50 MB Direct after the in-app unlock. A transfer can contain up to 10
+          files, and the service ceiling is 50 MB.
+        </p>
+
+        <h2>Privacy difference</h2>
+        <p>
+          Both modes encrypt the file on the sender's device. Cloud stores
+          ciphertext and session metadata; Direct streams ciphertext between the
+          devices. In both cases the server does not receive the file key. Direct
+          can expose network addresses to the other peer; a TURN relay can see
+          connection metadata, not plaintext.
+        </p>
+
+        <p>
+          Next: <a href="/guides/sender-qr-vs-receiver-qr">choose a QR direction</a>
+          or <a href="/guides/web-vs-app-limits">compare web and app limits</a>.
+        </p>
+      </article>
+    </main>
+    <!-- SITE_FOOTER -->
+  </body>
+</html>

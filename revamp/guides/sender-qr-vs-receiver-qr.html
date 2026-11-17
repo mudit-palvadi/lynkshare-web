@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sender QR vs Receiver QR: which flow should I use? | LynkShare</title>
+    <meta name="description" content="Learn the difference between the LynkShare sender QR and receiver QR flows, who should scan, and when to use each." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://lynkshare.app/guides/sender-qr-vs-receiver-qr" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://lynkshare.app/guides/sender-qr-vs-receiver-qr" />
+    <meta property="og:title" content="Sender QR vs Receiver QR: which flow should I use?" />
+    <meta property="og:description" content="Who should show the QR, who should scan it, and when each direction makes the transfer easier." />
+    <meta property="og:image" content="https://lynkshare.app/icons/icon-512.png" />
+    <meta property="og:site_name" content="LynkShare" />
+    <meta name="theme-color" content="#09090b" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <!-- SITE_HEADER -->
+    <main class="marketing content-page">
+      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <a href="/">Home</a><span>/</span><a href="/guides">Guides</a><span>/</span><span>QR flows</span>
+      </nav>
+      <article class="article">
+        <p class="eyebrow">Pairing</p>
+        <h1>Sender QR vs Receiver QR.</h1>
+        <p class="lead">
+          LynkShare has two QR directions. They answer one question: who is
+          holding the screen that the other person needs to scan? Choosing the
+          right direction removes typing and makes the transfer feel immediate.
+        </p>
+
+        <h2>Sender QR</h2>
+        <p>
+          The sender picks the files, chooses Cloud or Direct, and shows a QR
+          code. The receiver scans it with the camera. If the receiver is not in
+          the same room, the sender can share the same link remotely instead.
+        </p>
+        <ol>
+          <li>Sender chooses files and a transfer mode.</li>
+          <li>Sender shows the sender QR or sends the link.</li>
+          <li>Receiver scans or opens it.</li>
+          <li>Receiver saves the file.</li>
+        </ol>
+        <p>
+          Use this when the sender starts the transfer, when the receiver is
+          remote, or when the link needs to be sent through a chat.
+        </p>
+
+        <h2>Receiver QR</h2>
+        <p>
+          The receiver opens the receiving screen and shows a QR code. The sender
+          scans it from the Android app, which tells LynkShare which device is
+          waiting. The sender then sends the file to that device.
+        </p>
+        <ol>
+          <li>Receiver opens the receiving screen and shows the QR.</li>
+          <li>Sender scans it from the app.</li>
+          <li>Sender sends the chosen files to the waiting receiver.</li>
+          <li>Receiver saves the file.</li>
+        </ol>
+        <p>
+          Use this when the receiver is already waiting, when the receiver cannot
+          easily scan (for example, a laptop showing the QR), or when you want the
+          sender to target a specific device. The receiving-QR path uses Cloud
+          delivery.
+        </p>
+
+        <h2>Which one should I use?</h2>
+        <table>
+          <thead><tr><th>Situation</th><th>Use</th></tr></thead>
+          <tbody>
+            <tr><td>Receiver is remote and will open a link later</td><td>Sender QR or link</td></tr>
+            <tr><td>Both people are in the same room</td><td>Either; receiver QR is fastest for “send to this device”</td></tr>
+            <tr><td>Receiver is on a laptop without a camera</td><td>Receiver QR; the phone scans the laptop screen</td></tr>
+            <tr><td>Sender wants Direct</td><td>Sender QR, then choose Direct</td></tr>
+            <tr><td>Receiver is on iPhone/iPad</td><td>Sender QR/link; the browser receives through Cloud</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Keep the QR private</h2>
+        <p>
+          A QR contains the same capability as the link. Do not put it on a public
+          screen or in a public issue. If a code is rejected or a link expires,
+          ask for a fresh transfer.
+        </p>
+
+        <p>
+          Next: <a href="/guides/direct-vs-cloud">compare Direct and Cloud</a> or
+          <a href="/guides/expired-link">fix an expired link</a>.
+        </p>
+      </article>
+    </main>
+    <!-- SITE_FOOTER -->
+  </body>
+</html>
