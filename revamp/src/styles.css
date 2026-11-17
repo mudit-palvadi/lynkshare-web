@@ -243,6 +243,165 @@ p {
   border-radius: 0.75rem;
 }
 
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: min(72rem, 100% - 3rem);
+  margin: 0 auto;
+  padding: 1.25rem 0;
+}
+
+.site-nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.site-nav a,
+.footer a,
+.section a {
+  color: #f4f4f5;
+  text-underline-offset: 0.2em;
+}
+
+.marketing {
+  display: grid;
+  gap: 5rem;
+  width: min(72rem, 100% - 3rem);
+  margin: 0 auto;
+  padding: 4rem 0 6rem;
+}
+
+.hero {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 52rem;
+  padding: 4rem 0 2rem;
+}
+
+.hero h1 {
+  max-width: 16ch;
+  font-size: clamp(3rem, 8vw, 6.5rem);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.steps article,
+.feature-grid article {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1.25rem;
+  background: #111113;
+  border: 1px solid #27272a;
+  border-radius: 1.25rem;
+}
+
+.steps h2,
+.feature-grid h3,
+.section h2,
+.section h3 {
+  margin: 0;
+  color: #f4f4f5;
+}
+
+.steps p,
+.feature-grid p,
+.section p {
+  color: #a1a1aa;
+}
+
+.step-number {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  color: #09090b;
+  font-weight: 800;
+  background: #f4f4f5;
+  border-radius: 999px;
+}
+
+.section {
+  display: grid;
+  gap: 1rem;
+  max-width: 62rem;
+}
+
+.section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.promo {
+  width: min(34rem, calc(100% - 2rem));
+  padding: 1.5rem;
+  color: #f4f4f5;
+  background: #111113;
+  border: 1px solid #3f3f46;
+  border-radius: 1.25rem;
+}
+
+.promo::backdrop {
+  background: rgb(0 0 0 / 0.72);
+}
+
+.promo h2 {
+  margin: 0.5rem 0 0.75rem;
+  font-size: clamp(1.6rem, 5vw, 2.4rem);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  width: min(72rem, 100% - 3rem);
+  margin: 0 auto;
+  padding: 2rem 0 3rem;
+  border-top: 1px solid #27272a;
+}
+
+.app-note {
+  padding: 1.5rem;
+  background: #111113;
+  border: 1px solid #27272a;
+  border-radius: 1.25rem;
+}
+
+@media (max-width: 760px) {
+  .steps,
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .site-header {
+    width: min(72rem, 100% - 2rem);
+  }
+
+  .marketing {
+    width: min(72rem, 100% - 2rem);
+    gap: 3.5rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .progress-fill {
     transition: none;
