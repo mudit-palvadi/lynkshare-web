@@ -8,7 +8,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@engine": fileURLToPath(new URL("./js/core", import.meta.url)),
+      "#engine": fileURLToPath(new URL("./js/core", import.meta.url)),
     },
   },
   build: {

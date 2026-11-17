@@ -1,47 +1,6 @@
 import { useEffect } from "react";
-
-export function Shell({ eyebrow, title, children }) {
-  return (
-    <main className="shell">
-      <header className="masthead">
-        <a className="wordmark" href="/">
-          LynkShare
-        </a>
-      </header>
-      <section className="panel">
-        <p className="eyebrow">{eyebrow}</p>
-        <h1>{title}</h1>
-        {children}
-      </section>
-    </main>
-  );
-}
-
-export function SendScreen() {
-  return (
-    <Shell eyebrow="Send" title="You are sending.">
-      <p className="lead">Up to 10 MB on the web.</p>
-      <div className="choices">
-        <button className="choice" type="button">
-          <strong>Direct</strong>
-          <span>The other person needs to stay online. Falls back to Cloud.</span>
-        </button>
-        <button className="choice" type="button">
-          <strong>Cloud</strong>
-          <span>The link works while the 10-minute session is open.</span>
-        </button>
-      </div>
-      <div className="field">
-        <label htmlFor="send-files">Choose files</label>
-        <input id="send-files" type="file" multiple />
-        <p className="hint">Drop files here, or choose up to 10 files.</p>
-      </div>
-      <button className="primary" type="button" disabled>
-        Create link
-      </button>
-    </Shell>
-  );
-}
+import { Shell } from "./Shell.jsx";
+export { SendScreen } from "./send/SendScreen.jsx";
 
 export function ReceiveScreen() {
   return (
