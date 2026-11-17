@@ -1,11 +1,26 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { copyFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+
+function copyBootScript() {
+  return {
+    name: "copy-boot-script",
+    closeBundle() {
+      const output = fileURLToPath(new URL("./dist", import.meta.url));
+      mkdirSync(output, { recursive: true });
+      copyFileSync(
+        fileURLToPath(new URL("./revamp/boot.js", import.meta.url)),
+        fileURLToPath(new URL("./dist/boot.js", import.meta.url)),
+      );
+    },
+  };
+}
 
 export default defineConfig({
   root: "revamp",
   publicDir: "../assets",
-  plugins: [react()],
+  plugins: [react(), copyBootScript()],
   resolve: {
     alias: {
       "#engine": fileURLToPath(new URL("./js/core", import.meta.url)),

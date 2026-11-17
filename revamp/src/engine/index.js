@@ -2,6 +2,7 @@
 // this facade so the implementation can move without rewriting every caller.
 export * from "#engine/api.js";
 export * from "#engine/backpressure.js";
+export * from "./boot.js";
 export * from "#engine/chunk_collector.js";
 export * from "#engine/chunk_sender.js";
 export * from "#engine/config.js";
