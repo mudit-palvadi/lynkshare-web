@@ -73,6 +73,7 @@ function copyBootScript() {
         "robots.txt",
         "sitemap.xml",
         "manifest.webmanifest",
+        "_headers",
         "_redirects",
       ]) {
         copyFileSync(
