@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -55,6 +55,15 @@ test("the guides hub links every guide that exists", () => {
   ]) {
     assert.ok(hub.includes(`href="${path}"`), `hub is missing ${path}`);
   }
+});
+
+test("the website carries GPL-3.0 and says it is open source", () => {
+  const licensePath = join(root, "LICENSE");
+  assert.ok(existsSync(licensePath), "LICENSE is missing");
+  const license = readFileSync(licensePath, "utf8");
+  assert.match(license, /GNU GENERAL PUBLIC LICENSE/);
+  assert.ok(read("faq.html").includes("open source"));
+  assert.ok(read("about.html").includes("open source"));
 });
 
 test("the FAQ answers the free and retention questions", () => {
