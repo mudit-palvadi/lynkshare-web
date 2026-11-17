@@ -113,8 +113,10 @@ export function MarketingApp() {
           LynkShare
         </a>
         <nav className="site-nav" aria-label="Main">
+          <a href="/how-it-works">How it works</a>
+          <a href="/guides">Guides</a>
+          <a href="/faq">FAQ</a>
           <a href="/send">Send</a>
-          <a href="/receive">Receive</a>
         </nav>
       </header>
 
@@ -123,8 +125,8 @@ export function MarketingApp() {
           <p className="eyebrow">No account · Client-side encryption</p>
           <h1>Send a file without making an account.</h1>
           <p className="lead">
-            Pick a file, share a link or a six-digit code, and the other person
-            saves it. Encrypted on your device. Up to 10 MB on the web.
+            Pick a file, share a link or QR, and the other person saves it.
+            Encrypted on your device. Up to 10 MB on the web.
           </p>
           <div className="actions">
             <a className="primary" href="/send">
@@ -144,8 +146,8 @@ export function MarketingApp() {
           </article>
           <article>
             <span className="step-number">2</span>
-            <h2>Share the link or code</h2>
-            <p>Send the link, show the QR, or read out the six-digit code.</p>
+            <h2>Share the link or QR</h2>
+            <p>Send the link or show the sender QR. The receiver scans or opens it.</p>
           </article>
           <article>
             <span className="step-number">3</span>
@@ -193,21 +195,22 @@ export function MarketingApp() {
             key. Treat a complete link, QR image, or code as sensitive.
           </p>
           <p className="hint">
-            Read the <a href="https://sites.google.com/view/lynk-privacy-policy/">privacy policy</a>.
+            Read the <a href="/privacy">privacy policy</a>.
           </p>
         </section>
 
         <section className="section">
           <h2>Questions</h2>
-          <h3>How do I send from my phone to a laptop without an account?</h3>
+          <h3>How do I send files across devices without an account?</h3>
           <p>
-            Open Send on the phone, choose the files, then share the link or
-            code. On the laptop, open the link or enter the code.
+            Open Send on the sender, choose the files, then share the link or
+            QR. On the other device, open the link or scan the QR. iPhone and
+            iPad users receive in the browser.
           </p>
           <h3>Where does the key go?</h3>
           <p>
-            The key is created in the browser and stays in the link fragment.
-            It is not stored by the service.
+            The key is created on the sending device and stays in the link
+            fragment. It is not stored by the service.
           </p>
           <h3>What is the web size limit?</h3>
           <p>10 MB total per transfer, with at most 10 files.</p>
@@ -218,7 +221,7 @@ export function MarketingApp() {
         <section className="section app-note">
           <h2>Prefer the app?</h2>
           <p>
-            The Android app has higher size limits and fewer ads.{" "}
+            The Android app has higher size limits and a native transfer flow.{" "}
             <a href={PLAY_URL} target="_blank" rel="noopener noreferrer">
               Get LynkShare for Android
             </a>
@@ -228,10 +231,12 @@ export function MarketingApp() {
       </main>
 
       <footer className="footer">
-        <a href="/">Home</a>
-        <a href="/send">Send</a>
-        <a href="/receive">Receive</a>
-        <a href="https://sites.google.com/view/lynk-privacy-policy/">Privacy</a>
+        <a href="/about">About</a>
+        <a href="/how-it-works">How it works</a>
+        <a href="/guides">Guides</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="https://github.com/mudit-palvadi/LynkShare">GitHub</a>
       </footer>
     </>
   );
