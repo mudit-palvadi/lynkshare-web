@@ -73,6 +73,7 @@ function copyBootScript() {
         "robots.txt",
         "sitemap.xml",
         "manifest.webmanifest",
+        "_redirects",
       ]) {
         copyFileSync(
           fileURLToPath(new URL(`./revamp/${file}`, import.meta.url)),

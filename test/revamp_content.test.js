@@ -83,6 +83,25 @@ test("the content set does not add help, terms, security or contact pages", () =
   }
 });
 
+test("the new redirects map clean content URLs", () => {
+  const redirects = read("_redirects");
+  for (const path of [
+    "/about",
+    "/how-it-works",
+    "/faq",
+    "/privacy",
+    "/guides",
+    "/guides/direct-vs-cloud",
+    "/guides/cross-device-transfer",
+    "/guides/receive-on-iphone",
+    "/guides/sender-qr-vs-receiver-qr",
+    "/guides/expired-link",
+    "/guides/web-vs-app-limits",
+  ]) {
+    assert.ok(redirects.includes(`${path} `), `missing redirect for ${path}`);
+  }
+});
+
 test("the sitemap lists the content and guide pages", () => {
   const sitemap = read("sitemap.xml");
   for (const path of [

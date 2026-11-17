@@ -1,0 +1,21 @@
+/send /transfer.html 200
+/receive /transfer.html 200
+/send/* /transfer.html 200
+/receive/* /transfer.html 200
+
+/about /about.html 200
+/how-it-works /how-it-works.html 200
+/faq /faq.html 200
+/privacy /privacy.html 200
+/guides /guides.html 200
+/guides/direct-vs-cloud /guides/direct-vs-cloud.html 200
+/guides/cross-device-transfer /guides/cross-device-transfer.html 200
+/guides/receive-on-iphone /guides/receive-on-iphone.html 200
+/guides/sender-qr-vs-receiver-qr /guides/sender-qr-vs-receiver-qr.html 200
+/guides/expired-link /guides/expired-link.html 200
+/guides/web-vs-app-limits /guides/web-vs-app-limits.html 200
+
+/app/send /send 301
+/app/send.html /send 301
+/app/receive /receive 301
+/app/receive.html /receive 301
