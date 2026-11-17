@@ -1,0 +1,45 @@
+import {
+  decryptWithIvPrefix,
+  safeFileName,
+} from "../../engine/index.js";
+
+export async function loadTransferMetadata({ api, transferId, accessToken }) {
+  return api.getTransferMetadata(transferId, accessToken);
+}
+
+/**
+ * Fetches every download URL, decrypts each file and hands it to `save`.
+ * The key never leaves this call stack.
+ */
+export async function downloadShare({
+  api,
+  transferId,
+  accessToken,
+  key,
+  fetch = globalThis.fetch.bind(globalThis),
+  save,
+  onProgress = () => {},
+}) {
+  const files = await api.getDownloadUrls(transferId, accessToken);
+  const saved = [];
+
+  for (let i = 0; i < files.length; i += 1) {
+    const file = files[i];
+    onProgress({
+      progress: i / files.length,
+      label: `Downloading ${file.fileName}…`,
+    });
+    const response = await fetch(file.downloadUrl);
+    if (!response.ok) {
+      throw new Error(`download failed (${response.status})`);
+    }
+    const packed = new Uint8Array(await response.arrayBuffer());
+    const plain = await decryptWithIvPrefix(packed, key);
+    const name = safeFileName(file.fileName);
+    await save({ name, bytes: plain });
+    saved.push(name);
+  }
+
+  onProgress({ progress: 1, label: "Saved" });
+  return saved;
+}
