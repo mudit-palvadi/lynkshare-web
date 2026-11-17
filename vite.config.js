@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { copyFileSync, mkdirSync } from "node:fs";
+import { copyFileSync, cpSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const contentRoutes = new Map([
@@ -87,6 +87,11 @@ function copyBootScript() {
           fileURLToPath(new URL(`./dist/${file}`, import.meta.url)),
         );
       }
+      cpSync(
+        fileURLToPath(new URL("./.well-known", import.meta.url)),
+        fileURLToPath(new URL("./dist/.well-known", import.meta.url)),
+        { recursive: true },
+      );
     },
   };
 }
