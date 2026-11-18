@@ -37,11 +37,20 @@ function fileBadge(name) {
 function codeStatusText(session) {
   if (!session) return "";
   if (session.status === "waiting") return "";
+  if (session.status === "joined") {
+    return "A device joined. Check the key below, then choose whether to share.";
+  }
   if (session.status === "attaching") {
-    return "Receiver joined — handing over the key…";
+    return "Sharing the key with this device…";
   }
   if (session.status === "attached") {
     return "Receiver joined — files unlocked.";
+  }
+  if (session.status === "cancelling") {
+    return "Cancelling this code…";
+  }
+  if (session.status === "cancelled") {
+    return "Code cancelled — send the link instead.";
   }
   if (session.status === "expired") {
     return "Code expired — send the link instead.";
@@ -109,8 +118,8 @@ export function SendScreen() {
         expiryTimer = window.setTimeout(() => {
           if (cancelled) return;
           setCodeSession((current) =>
-            current?.status === "waiting"
-              ? { ...current, status: "expired" }
+            current?.status === "waiting" || current?.status === "joined"
+              ? { ...current, status: "expired", receiverPk: null }
               : current,
           );
         }, lifetime * 1000);
@@ -124,30 +133,16 @@ export function SendScreen() {
             });
             if (cancelled) return;
             if (join) {
-              window.clearTimeout(expiryTimer);
               setCodeSession((current) =>
                 current
                   ? {
                       ...current,
-                      status: "attaching",
+                      status: "joined",
                       fingerprint: join.fingerprint,
+                      receiverPk: join.receiverPk,
                     }
                   : current,
               );
-              await attachSenderCode({
-                api,
-                session,
-                transferId: result.transferId,
-                key: result.key,
-                accessToken: result.accessToken,
-                mode: result.mode === "direct" ? "p2p" : "cloud",
-                receiverPk: join.receiverPk,
-              });
-              if (!cancelled) {
-                setCodeSession((current) =>
-                  current ? { ...current, status: "attached" } : current,
-                );
-              }
               return;
             }
           } catch {
@@ -423,6 +418,52 @@ export function SendScreen() {
     }
   }
 
+  async function shareWithCodeDevice() {
+    if (!result || !codeSession?.receiverPk) return;
+    setCodeSession((current) =>
+      current ? { ...current, status: "attaching" } : current,
+    );
+    try {
+      await attachSenderCode({
+        api: new LynkApi({ baseUrl: resolveApiBase() }),
+        session: codeSession,
+        transferId: result.transferId,
+        key: result.key,
+        accessToken: result.accessToken,
+        mode: result.mode === "direct" ? "p2p" : "cloud",
+        receiverPk: codeSession.receiverPk,
+      });
+      setCodeSession((current) =>
+        current ? { ...current, status: "attached" } : current,
+      );
+    } catch {
+      setCodeSession((current) =>
+        current ? { ...current, status: "error" } : current,
+      );
+    }
+  }
+
+  async function rejectCodeDevice() {
+    if (!codeSession?.sessionId) return;
+    setCodeSession((current) =>
+      current ? { ...current, status: "cancelling" } : current,
+    );
+    try {
+      await new LynkApi({
+        baseUrl: resolveApiBase(),
+      }).cancelSenderSession(codeSession.sessionId, codeSession.senderSecret);
+      setCodeSession((current) =>
+        current
+          ? { ...current, status: "cancelled", code: "", receiverPk: null }
+          : current,
+      );
+    } catch {
+      setCodeSession((current) =>
+        current ? { ...current, status: "error" } : current,
+      );
+    }
+  }
+
   async function closeSession() {
     if (!result || closing) return;
     setClosing(true);
@@ -461,12 +502,16 @@ export function SendScreen() {
               ? `Session ends in ${formatTime(remaining)}.`
               : "This session has expired."}
           </p>
-          {codeSession?.code && (
+          {codeSession && (
             <div className="code-panel">
-              <p className="hint">Or the receiver can enter this code</p>
-              <p className="sender-code" aria-label="Six-digit code">
-                {codeSession.code}
-              </p>
+              {codeSession.code && (
+                <>
+                  <p className="hint">Or the receiver can enter this code</p>
+                  <p className="sender-code" aria-label="Six-digit code">
+                    {codeSession.code}
+                  </p>
+                </>
+              )}
               {codeStatusText(codeSession) && (
                 <p
                   className={
@@ -479,6 +524,24 @@ export function SendScreen() {
               )}
               {codeSession.fingerprint && (
                 <p className="hint">Key check {codeSession.fingerprint}</p>
+              )}
+              {codeSession.status === "joined" && (
+                <div className="actions">
+                  <button
+                    className="primary"
+                    type="button"
+                    onClick={shareWithCodeDevice}
+                  >
+                    Share with this device
+                  </button>
+                  <button
+                    className="secondary"
+                    type="button"
+                    onClick={rejectCodeDevice}
+                  >
+                    Not this device
+                  </button>
+                </div>
               )}
             </div>
           )}
