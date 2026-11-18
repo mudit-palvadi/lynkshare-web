@@ -77,3 +77,18 @@ test("network failure maps to a NetworkError", async () => {
     (err) => err.name === "NetworkError",
   );
 });
+
+test("cancelling a transfer and a sender session uses DELETE with the secret", async () => {
+  const { fetch, calls } = mockFetch([{ status: 204 }, { status: 204 }]);
+  const api = new LynkApi({ baseUrl: "http://b", fetch });
+
+  await api.cancelTransfer("t1", "secret");
+  await api.cancelSenderSession("s1", "secret");
+
+  assert.equal(calls[0].url, "http://b/api/v1/transfers/t1");
+  assert.equal(calls[0].options.method, "DELETE");
+  assert.equal(calls[0].options.headers["X-Lynk-Sender-Secret"], "secret");
+  assert.equal(calls[1].url, "http://b/api/v1/sender-sessions/s1");
+  assert.equal(calls[1].options.method, "DELETE");
+  assert.equal(calls[1].options.headers["X-Lynk-Sender-Secret"], "secret");
+});
