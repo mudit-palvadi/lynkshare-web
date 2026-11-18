@@ -29,6 +29,11 @@ function formatTime(seconds) {
   return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, "0")}`;
 }
 
+function fileBadge(name) {
+  const extension = (name.split(".").pop() || "").toUpperCase();
+  return extension.length > 0 && extension.length <= 4 ? extension : "FILE";
+}
+
 function codeStatusText(session) {
   if (!session) return "";
   if (session.status === "waiting") {
@@ -60,6 +65,7 @@ export function SendScreen() {
   const [pendingPair, setPendingPair] = useState(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanError, setScanError] = useState("");
+  const [dragging, setDragging] = useState(false);
   const videoRef = useRef(null);
   const cancelScanRef = useRef(null);
 
@@ -134,7 +140,7 @@ export function SendScreen() {
                 transferId: result.transferId,
                 key: result.key,
                 accessToken: result.accessToken,
-                mode: result.mode,
+                mode: result.mode === "direct" ? "p2p" : "cloud",
                 receiverPk: join.receiverPk,
               });
               if (!cancelled) {
@@ -307,6 +313,11 @@ export function SendScreen() {
 
   async function startDirect() {
     if (!validation.ok || busy || !directSupported) return;
+    if (pendingPair) {
+      // A receiver that showed its QR is waiting for an attached transfer,
+      // not for a signaling room.
+      return startCloud();
+    }
     setError("");
     setCopied(false);
     setPhase("encrypting");
@@ -533,10 +544,16 @@ export function SendScreen() {
       </div>
 
       <div
-        className="drop-zone"
+        className={dragging ? "drop-zone drag-active" : "drop-zone"}
+        onDragEnter={(event) => {
+          event.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
         onDragOver={(event) => event.preventDefault()}
         onDrop={(event) => {
           event.preventDefault();
+          setDragging(false);
           addFiles(event.dataTransfer.files);
         }}
       >
@@ -560,9 +577,12 @@ export function SendScreen() {
         <ul className="file-list" aria-label="Selected files">
           {files.map((file, index) => (
             <li className="file-row" key={`${file.name}-${index}`}>
-              <span>
-                <strong>{file.name}</strong>
-                <small>{formatBytes(file.size)}</small>
+              <span className="file-name-cell">
+                <span className="file-badge">{fileBadge(file.name)}</span>
+                <span>
+                  <strong>{file.name}</strong>
+                  <small>{formatBytes(file.size)}</small>
+                </span>
               </span>
               <button
                 className="link-button"

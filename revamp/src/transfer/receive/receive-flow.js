@@ -83,6 +83,14 @@ export function receiveDirectOnce({
     onComplete: () => finish("delivered"),
   });
 
+  if (settled) {
+    try {
+      cleanup?.();
+    } catch {
+      // The engine is already closing its own resources.
+    }
+  }
+
   return {
     promise,
     cancel: () => finish("cancelled"),

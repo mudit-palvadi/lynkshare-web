@@ -40,12 +40,12 @@ export function ReceiveScreen() {
       const pairing = await startReceiverPairing({
         api,
         origin: window.location.origin,
-        version: 2,
       });
       setFlow({
         kind: "qr",
         ...pairing,
-        expiresAt: Date.now() + pairing.expiresIn * 1000,
+        expiresAt:
+          Date.now() + (pairing.expiresIn || 600) * 1000,
       });
       setPhase("waiting");
     } catch {
@@ -75,7 +75,7 @@ export function ReceiveScreen() {
         sessionId: session.sessionId,
         receiverSecret: session.receiverSecret,
         privateKeySeed: receiver.privateKeySeed,
-        expiresAt: Date.now() + session.expiresIn * 1000,
+        expiresAt: Date.now() + (session.expiresIn || 600) * 1000,
       });
       setPhase("waiting");
     } catch {

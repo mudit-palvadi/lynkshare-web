@@ -13,6 +13,8 @@ export function buildReceiverLink({
   version = 1,
 }) {
   const base = String(origin ?? "").replace(/\/+$/, "");
+  // Keep v=1 until every scanner strips the flag. The current Android parser
+  // treats the whole fragment after pk= as the key.
   const flag = version === 2 ? "&v=2" : "";
   return `${base}/receive/${encodeURIComponent(sessionId)}#pk=${publicKeyB64}${flag}`;
 }
