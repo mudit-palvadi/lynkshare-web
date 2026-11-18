@@ -39,6 +39,13 @@ test("encrypted size adds IV prefix plus PKCS7 padding like the app", () => {
   assert.equal(encryptedSize(1024), 1024 + 16 + 16);
 });
 
+test("version-2 encrypted size adds the nonce and tag without padding", () => {
+  assert.equal(encryptedSize(0, 2), 12 + 16);
+  assert.equal(encryptedSize(15, 2), 15 + 12 + 16);
+  assert.equal(encryptedSize(16, 2), 16 + 12 + 16);
+  assert.equal(encryptedSize(1024, 2), 1024 + 12 + 16);
+});
+
 test("selection within the active limit passes", () => {
   const result = validateSelection(
     [{ name: "a", size: 1 * MB }],

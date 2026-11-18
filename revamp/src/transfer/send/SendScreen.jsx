@@ -79,12 +79,13 @@ export function SendScreen() {
   const cancelScanRef = useRef(null);
 
   const directSupported = useMemo(() => isP2pSupported(), []);
+  const cipherVersion = mode === "direct" ? 1 : 2;
   const validation = useMemo(
-    () => validateSelection(files, "cloud", false),
-    [files],
+    () => validateSelection(files, "cloud", false, cipherVersion),
+    [files, cipherVersion],
   );
   const totalEncrypted = files.reduce(
-    (sum, file) => sum + encryptedSize(file.size),
+    (sum, file) => sum + encryptedSize(file.size, cipherVersion),
     0,
   );
   const busy = phase === "encrypting" || phase === "uploading";

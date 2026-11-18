@@ -19,17 +19,21 @@ export function maxTotalSize(mode, unlocked) {
 // readable reason on the page.
 export const MAX_FILES = 10;
 
-export function encryptedSize(plainSize) {
+export function encryptedSize(plainSize, version = 1) {
+  if (version === 2) return plainSize + 12 + 16;
   const paddedBlocks = (Math.floor(plainSize / 16) + 1) * 16;
   return paddedBlocks + 16;
 }
 
-export function validateSelection(files, mode, unlocked) {
+export function validateSelection(files, mode, unlocked, version = 1) {
   if (!files || files.length === 0) {
     return { ok: false, reason: "Pick at least one file." };
   }
   const limit = maxTotalSize(mode, unlocked);
-  const totalEncrypted = files.reduce((sum, f) => sum + encryptedSize(f.size), 0);
+  const totalEncrypted = files.reduce(
+    (sum, f) => sum + encryptedSize(f.size, version),
+    0,
+  );
   if (totalEncrypted > limit) {
     return {
       ok: false,

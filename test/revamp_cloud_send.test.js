@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createCloudShare } from "../revamp/src/transfer/send/cloud-send.js";
+import { decryptWithGcm } from "../revamp/src/engine/crypto-v2.js";
 
 function fakeFile(name, text) {
   const bytes = new TextEncoder().encode(text);
@@ -45,6 +46,7 @@ test("cloud send encrypts, uploads, completes and returns the link", async () =>
   const share = await createCloudShare({
     files: [fakeFile("note.txt", "hello")],
     key,
+    version: 1,
     origin: "https://lynkshare.app",
     api,
     fetch,
@@ -77,4 +79,53 @@ test("cloud send encrypts, uploads, completes and returns the link", async () =>
   );
   assert.equal(progress.at(-1).phase, "done");
   assert.equal(progress.at(-1).progress, 1);
+});
+
+test("cloud send writes version 2 with a prefixed key and AES-GCM", async () => {
+  const keyBody = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8";
+  const created = {
+    transferId: "transfer-2",
+    senderSecret: "sender-secret",
+    accessToken: "access-token",
+    expiresIn: 600,
+    files: [
+      {
+        fileId: "file-1",
+        fileName: "note.txt",
+        uploadUrl: "https://r2.example/upload",
+      },
+    ],
+  };
+  let uploadBody;
+  const api = {
+    async createTransfer(files) {
+      assert.equal(files[0].size, 5 + 28);
+      return created;
+    },
+    async completeFile() {},
+  };
+  const fetch = async (_url, options) => {
+    uploadBody = options.body;
+    return { ok: true, status: 200 };
+  };
+
+  const share = await createCloudShare({
+    files: [fakeFile("note.txt", "hello")],
+    key: keyBody,
+    version: 2,
+    origin: "https://lynkshare.app",
+    api,
+    fetch,
+  });
+
+  assert.equal(
+    share.link,
+    `https://lynkshare.app/send/transfer-2#2.${keyBody}&a=access-token`,
+  );
+  assert.equal(share.key, `2.${keyBody}`);
+  assert.equal(uploadBody.length, 5 + 28);
+  assert.equal(
+    new TextDecoder().decode(await decryptWithGcm(uploadBody, keyBody)),
+    "hello",
+  );
 });

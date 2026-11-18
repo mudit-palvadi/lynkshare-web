@@ -2,7 +2,9 @@ import {
   LynkApi,
   buildSendLink,
   encryptedSize,
+  encryptWithGcm,
   encryptWithIvPrefix,
+  generateGcmKey,
   resolveApiBase,
 } from "../../engine/index.js";
 
@@ -12,7 +14,12 @@ export function generateLegacyKey() {
     .join("");
 }
 
-export async function encryptSelection({ files, key, onProgress = () => {} }) {
+export async function encryptSelection({
+  files,
+  key,
+  version = 1,
+  onProgress = () => {},
+}) {
   const encrypted = [];
   for (let i = 0; i < files.length; i += 1) {
     const file = files[i];
@@ -24,8 +31,11 @@ export async function encryptSelection({ files, key, onProgress = () => {} }) {
     const plain = new Uint8Array(await file.arrayBuffer());
     encrypted.push({
       name: file.name,
-      size: encryptedSize(file.size),
-      blob: await encryptWithIvPrefix(plain, key),
+      size: encryptedSize(file.size, version),
+      blob:
+        version === 2
+          ? await encryptWithGcm(plain, key)
+          : await encryptWithIvPrefix(plain, key),
     });
   }
   return encrypted;
@@ -50,15 +60,16 @@ export async function createTransferSession({
   );
 }
 
-export function buildShare({ session, key, origin, files }) {
+export function buildShare({ session, key, origin, files, version = 1 }) {
+  const linkKey = version === 2 ? `2.${key}` : key;
   return {
     link: buildSendLink(
       origin,
       session.transferId,
-      key,
+      linkKey,
       session.accessToken,
     ),
-    key,
+    key: linkKey,
     transferId: session.transferId,
     senderSecret: session.senderSecret,
     accessToken: session.accessToken,
@@ -109,14 +120,20 @@ export async function uploadEncrypted({
  */
 export async function createCloudShare({
   files,
-  key = generateLegacyKey(),
+  version = 2,
+  key = version === 2 ? generateGcmKey() : generateLegacyKey(),
   origin = globalThis.window?.location?.origin ?? "",
   api = new LynkApi({ baseUrl: resolveApiBase() }),
   fetch = globalThis.fetch.bind(globalThis),
   onProgress = () => {},
 }) {
-  const encrypted = await encryptSelection({ files, key, onProgress });
+  const encrypted = await encryptSelection({
+    files,
+    key,
+    version,
+    onProgress,
+  });
   const session = await createTransferSession({ api, encrypted, onProgress });
   await uploadEncrypted({ api, fetch, encrypted, session, onProgress });
-  return buildShare({ session, key, origin, files });
+  return buildShare({ session, key, origin, files, version });
 }
