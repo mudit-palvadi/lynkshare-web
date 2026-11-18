@@ -42,6 +42,20 @@ test("the marketing page avoids unsupported claims", () => {
 test("the public pages avoid key-fragment jargon", () => {
   assert.equal(source.includes("link fragment"), false);
   assert.equal(share.includes("The key is read from the original link"), false);
+  for (const file of [
+    "revamp/index.html",
+    "revamp/transfer.html",
+    "revamp/about.html",
+    "revamp/faq.html",
+    "revamp/how-it-works.html",
+    "revamp/privacy.html",
+  ]) {
+    assert.equal(
+      readFileSync(join(root, file), "utf8").includes("link fragment"),
+      false,
+      `${file} still uses link-fragment jargon`,
+    );
+  }
 });
 
 test("recent activity uses the tab store and renders names as text", () => {
