@@ -8,6 +8,7 @@ import {
   resolveApiBase,
 } from "../../engine/index.js";
 import { Shell } from "../Shell.jsx";
+import { AppPromo } from "../../components/AppPromo.jsx";
 import { bootFragment } from "../boot-link.js";
 import { receiveDirectOnce } from "./receive-flow.js";
 import { downloadShare, loadTransferMetadata } from "./share-receive.js";
@@ -244,6 +245,7 @@ export function ShareScreen({ transferId }) {
           The browser saved the file. If it asked where to save, check that
           folder.
         </p>
+        <AppPromo />
       </Shell>
     );
   }

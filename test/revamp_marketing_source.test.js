@@ -10,9 +10,10 @@ const source = readFileSync(
   "utf8",
 );
 
-test("the marketing page carries the app promo and both transfer actions", () => {
+test("the marketing page carries the app link and both transfer actions without a dialog", () => {
   assert.ok(source.includes("Get LynkShare for Android"));
-  assert.ok(source.includes("Continue on the web"));
+  assert.equal(source.includes("AppPromo"), false);
+  assert.equal(source.includes("showModal"), false);
   assert.ok(source.includes('href="/send"'));
   assert.ok(source.includes('href="/receive"'));
 });
