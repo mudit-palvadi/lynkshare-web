@@ -28,6 +28,15 @@ test("the transfer document never uses a file name in its social card", () => {
   assert.equal(html.includes("fileName"), false);
 });
 
+test("the transfer document points at the API origin", () => {
+  const html = read("revamp/transfer.html");
+  assert.ok(
+    html.includes(
+      'name="lynk-api-base" content="https://api.lynkshare.app"',
+    ),
+  );
+});
+
 test("id routes get noindex from the edge, not a static marketing meta", () => {
   const transfer = read("revamp/transfer.html");
   assert.equal(transfer.includes('name="robots"'), false);
