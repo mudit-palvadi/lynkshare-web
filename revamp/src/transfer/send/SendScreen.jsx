@@ -13,6 +13,7 @@ import {
 import { Shell } from "../Shell.jsx";
 import { createCloudShare } from "./cloud-send.js";
 import { startDirectShare } from "./direct-send.js";
+import { attachSenderCode, readSenderJoin } from "./sender-code.js";
 
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -25,6 +26,23 @@ function formatTime(seconds) {
   return `${Math.floor(safe / 60)}:${String(safe % 60).padStart(2, "0")}`;
 }
 
+function codeStatusText(session) {
+  if (!session) return "";
+  if (session.status === "waiting") {
+    return "Waiting for the receiver to enter this code.";
+  }
+  if (session.status === "attaching") {
+    return "Receiver joined — handing over the key…";
+  }
+  if (session.status === "attached") {
+    return "Receiver joined — files unlocked.";
+  }
+  if (session.status === "expired") {
+    return "Code expired — send the link instead.";
+  }
+  return "Code pairing failed — send the link instead.";
+}
+
 export function SendScreen() {
   const [files, setFiles] = useState([]);
   const [mode, setMode] = useState("cloud");
@@ -35,6 +53,7 @@ export function SendScreen() {
   const [result, setResult] = useState(null);
   const [remaining, setRemaining] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [codeSession, setCodeSession] = useState(null);
 
   const directSupported = useMemo(() => isP2pSupported(), []);
   const validation = useMemo(
@@ -55,6 +74,92 @@ export function SendScreen() {
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
   }, [result?.expiresAt]);
+
+  useEffect(() => {
+    if (!result) return undefined;
+    let cancelled = false;
+    let pollTimer;
+    let expiryTimer;
+    const api = new LynkApi({ baseUrl: resolveApiBase() });
+
+    async function start() {
+      try {
+        const session = await api.createSenderSession();
+        if (cancelled) return;
+        const lifetime = session.expiresIn || 600;
+        setCodeSession({
+          ...session,
+          status: "waiting",
+          expiresAt: Date.now() + lifetime * 1000,
+        });
+        expiryTimer = window.setTimeout(() => {
+          if (cancelled) return;
+          setCodeSession((current) =>
+            current?.status === "waiting"
+              ? { ...current, status: "expired" }
+              : current,
+          );
+        }, lifetime * 1000);
+
+        const poll = async () => {
+          if (cancelled) return;
+          try {
+            const join = await readSenderJoin({
+              api,
+              sessionId: session.sessionId,
+            });
+            if (cancelled) return;
+            if (join) {
+              window.clearTimeout(expiryTimer);
+              setCodeSession((current) =>
+                current
+                  ? {
+                      ...current,
+                      status: "attaching",
+                      fingerprint: join.fingerprint,
+                    }
+                  : current,
+              );
+              await attachSenderCode({
+                api,
+                session,
+                transferId: result.transferId,
+                key: result.key,
+                accessToken: result.accessToken,
+                mode: result.mode,
+                receiverPk: join.receiverPk,
+              });
+              if (!cancelled) {
+                setCodeSession((current) =>
+                  current ? { ...current, status: "attached" } : current,
+                );
+              }
+              return;
+            }
+          } catch {
+            if (!cancelled) {
+              setCodeSession((current) =>
+                current ? { ...current, status: "error" } : current,
+              );
+            }
+            return;
+          }
+          if (!cancelled) pollTimer = window.setTimeout(poll, 2000);
+        };
+
+        pollTimer = window.setTimeout(poll, 2000);
+      } catch {
+        if (!cancelled) setCodeSession(null);
+      }
+    }
+
+    start();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(pollTimer);
+      window.clearTimeout(expiryTimer);
+    };
+  }, [result?.transferId, result?.key, result?.accessToken, result?.mode]);
 
   function reportProgress(event) {
     if (event.phase) setPhase(event.phase);
@@ -251,6 +356,25 @@ export function SendScreen() {
               ? `Session ends in ${formatTime(remaining)}.`
               : "This session has expired."}
           </p>
+          {codeSession?.code && (
+            <div className="code-panel">
+              <p className="hint">Or the receiver can enter this code</p>
+              <p className="sender-code" aria-label="Six-digit code">
+                {codeSession.code}
+              </p>
+              <p
+                className={
+                  codeSession.status === "error" ? "error" : "hint"
+                }
+                role="status"
+              >
+                {codeStatusText(codeSession)}
+              </p>
+              {codeSession.fingerprint && (
+                <p className="hint">Key check {codeSession.fingerprint}</p>
+              )}
+            </div>
+          )}
           {phase === "uploading" && (
             <div className="progress" role="status" aria-live="polite">
               <span>{label || "Uploading…"}</span>
@@ -285,6 +409,7 @@ export function SendScreen() {
               setProgress(0);
               setLabel("");
               setCopied(false);
+              setCodeSession(null);
             }}
           >
             Create another
