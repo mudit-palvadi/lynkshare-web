@@ -1,56 +1,13 @@
-import { StrictMode, useEffect, useRef, useState } from "react";
+import { StrictMode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { HistoryStore } from "../engine/index.js";
+import { PLAY_URL } from "../components/play-url.js";
 import "../styles.css";
-
-const PLAY_URL =
-  "https://play.google.com/store/apps/details?id=app.xynix.lynk";
 
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function AppPromo() {
-  const dialogRef = useRef(null);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (dialog && !dialog.open) dialog.showModal();
-  }, []);
-
-  return (
-    <dialog
-      ref={dialogRef}
-      className="promo"
-      aria-labelledby="app-promo-title"
-    >
-      <p className="eyebrow">Android app</p>
-      <h2 id="app-promo-title">Get LynkShare for Android.</h2>
-      <p>
-        Higher size limits, fewer ads, and the same no-account flow in a native
-        app.
-      </p>
-      <div className="actions">
-        <a
-          className="primary"
-          href={PLAY_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Get it on Google Play
-        </a>
-        <button
-          className="secondary"
-          type="button"
-          onClick={() => dialogRef.current?.close()}
-        >
-          Continue on the web
-        </button>
-      </div>
-    </dialog>
-  );
 }
 
 function RecentActivity() {
@@ -107,7 +64,6 @@ function RecentActivity() {
 export function MarketingApp() {
   return (
     <>
-      <AppPromo />
       <header className="site-header">
         <a className="wordmark" href="/">
           LynkShare
