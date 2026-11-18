@@ -62,7 +62,6 @@ export function SendScreen() {
   const [remaining, setRemaining] = useState(0);
   const [copied, setCopied] = useState(false);
   const [codeSession, setCodeSession] = useState(null);
-  const [pendingPair, setPendingPair] = useState(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanError, setScanError] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -198,9 +197,9 @@ export function SendScreen() {
           setScanError("That QR code is not a LynkShare receiver code.");
           return;
         }
-        setPendingPair(parsed);
         setScanError("");
         setScannerOpen(false);
+        attachScannedReceiver(parsed);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -248,20 +247,20 @@ export function SendScreen() {
     });
   }
 
-  async function deliverToPaired(api, share) {
-    if (!pendingPair) return false;
+  async function attachScannedReceiver(pair) {
+    if (!result) return;
     try {
       await attachToPairedReceiver({
-        api,
-        pair: pendingPair,
-        transferId: share.transferId,
-        key: share.key,
-        accessToken: share.accessToken,
+        api: new LynkApi({ baseUrl: resolveApiBase() }),
+        pair,
+        transferId: result.transferId,
+        key: result.key,
+        accessToken: result.accessToken,
       });
-      setPendingPair(null);
-      return true;
+      setScanError("");
+      updateStatus("Sent to the paired receiver.");
     } catch {
-      return false;
+      setScanError("Could not attach to that receiver. Share the link instead.");
     }
   }
 
@@ -280,16 +279,11 @@ export function SendScreen() {
         origin: window.location.origin,
         onProgress: reportProgress,
       });
-      const paired = await deliverToPaired(api, share);
 
       setResult({
         ...share,
         mode: "cloud",
-        status: paired
-          ? "Sent to the paired phone."
-          : pendingPair
-            ? "Uploaded, but the paired phone did not confirm. Share the link instead."
-            : "",
+        status: "",
         expiresAt: Date.now() + share.expiresIn * 1000,
       });
       setPhase("done");
@@ -313,11 +307,6 @@ export function SendScreen() {
 
   async function startDirect() {
     if (!validation.ok || busy || !directSupported) return;
-    if (pendingPair) {
-      // A receiver that showed its QR is waiting for an attached transfer,
-      // not for a signaling room.
-      return startCloud();
-    }
     setError("");
     setCopied(false);
     setPhase("encrypting");
@@ -359,7 +348,6 @@ export function SendScreen() {
       });
 
       if (delivered) {
-        setPendingPair(null);
         setPhase("done");
         updateStatus("Delivered directly. The receiver has every file.");
         recordSend(
@@ -371,15 +359,8 @@ export function SendScreen() {
         return;
       }
 
-      const paired = await deliverToPaired(api, share);
       setPhase("done");
-      updateStatus(
-        paired
-          ? "Sent to the paired phone."
-          : pendingPair
-            ? "Uploaded, but the paired phone did not confirm. Share the link instead."
-            : "Uploaded. The link now works from the cloud.",
-      );
+      updateStatus("Uploaded. The link now works from the cloud.");
       recordSend(
         session.transferId,
         share.fileNames,
@@ -466,6 +447,37 @@ export function SendScreen() {
               )}
             </div>
           )}
+          {isCameraScanSupported() && (
+            <div className="scan-row">
+              <button
+                className="secondary"
+                type="button"
+                onClick={() => {
+                  setScanError("");
+                  setScannerOpen(true);
+                }}
+              >
+                Scan receiver QR
+              </button>
+              {scanError && <p className="error">{scanError}</p>}
+            </div>
+          )}
+          {scannerOpen && (
+            <div className="scanner-card">
+              <video ref={videoRef} playsInline muted />
+              <p className="hint">Point the camera at the receiver QR code.</p>
+              <button
+                className="secondary"
+                type="button"
+                onClick={() => {
+                  cancelScanRef.current?.();
+                  setScannerOpen(false);
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
           {phase === "uploading" && (
             <div className="progress" role="status" aria-live="polite">
               <span>{label || "Uploading…"}</span>
@@ -515,33 +527,6 @@ export function SendScreen() {
       <p className="lead">
         Up to {maxTotalSize("cloud", false) / (1024 * 1024)} MB on the web.
       </p>
-
-      <div className="choices" role="group" aria-label="Transfer mode">
-        <button
-          className={mode === "direct" ? "choice choice-selected" : "choice"}
-          type="button"
-          onClick={() => setMode("direct")}
-          disabled={busy || !directSupported}
-          aria-pressed={mode === "direct"}
-        >
-          <strong>Direct</strong>
-          <span>
-            {directSupported
-              ? "Both devices connect and the file streams peer to peer. Falls back to Cloud."
-              : "Direct needs WebRTC in this browser. Use Cloud instead."}
-          </span>
-        </button>
-        <button
-          className={mode === "cloud" ? "choice choice-selected" : "choice"}
-          type="button"
-          onClick={() => setMode("cloud")}
-          disabled={busy}
-          aria-pressed={mode === "cloud"}
-        >
-          <strong>Cloud</strong>
-          <span>The link works while the 10-minute session is open.</span>
-        </button>
-      </div>
 
       <div
         className={dragging ? "drop-zone drag-active" : "drop-zone"}
@@ -597,45 +582,6 @@ export function SendScreen() {
         </ul>
       )}
 
-      {isCameraScanSupported() && (
-        <div className="scan-row">
-          <button
-            className="secondary"
-            type="button"
-            onClick={() => {
-              setScanError("");
-              setScannerOpen(true);
-            }}
-            disabled={files.length === 0 || busy}
-          >
-            Scan their receiver code
-          </button>
-          {pendingPair && (
-            <p className="hint">
-              Paired with a receiver. The link attaches after the upload.
-            </p>
-          )}
-          {scanError && <p className="error">{scanError}</p>}
-        </div>
-      )}
-
-      {scannerOpen && (
-        <div className="scanner-card">
-          <video ref={videoRef} playsInline muted />
-          <p className="hint">Point the camera at the receiver QR code.</p>
-          <button
-            className="secondary"
-            type="button"
-            onClick={() => {
-              cancelScanRef.current?.();
-              setScannerOpen(false);
-            }}
-          >
-            Cancel
-          </button>
-        </div>
-      )}
-
       <p
         className={validation.ok || files.length === 0 ? "hint" : "error"}
         role="status"
@@ -647,34 +593,76 @@ export function SendScreen() {
             : validation.reason}
       </p>
 
-      {busy && (
-        <div className="progress" role="status" aria-live="polite">
-          <span>{label || "Working…"}</span>
-          <span>{Math.round(progress * 100)}%</span>
-          <div className="progress-track">
-            <div className="progress-fill" style={{ width: `${progress * 100}%` }} />
+      {files.length > 0 && (
+        <>
+          <p className="hint">
+            Choose how to send {files.length === 1 ? "this file" : "these files"}.
+          </p>
+
+          <div className="choices" role="group" aria-label="Transfer mode">
+            <button
+              className={
+                mode === "direct" ? "choice choice-selected" : "choice"
+              }
+              type="button"
+              onClick={() => setMode("direct")}
+              disabled={busy || !directSupported}
+              aria-pressed={mode === "direct"}
+            >
+              <strong>Direct</strong>
+              <span>
+                {directSupported
+                  ? "Both devices connect and the file streams peer to peer. Falls back to Cloud."
+                  : "Direct needs WebRTC in this browser. Use Cloud instead."}
+              </span>
+            </button>
+            <button
+              className={mode === "cloud" ? "choice choice-selected" : "choice"}
+              type="button"
+              onClick={() => setMode("cloud")}
+              disabled={busy}
+              aria-pressed={mode === "cloud"}
+            >
+              <strong>Cloud</strong>
+              <span>The link works while the 10-minute session is open.</span>
+            </button>
           </div>
-        </div>
-      )}
 
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      )}
+          {busy && (
+            <div className="progress" role="status" aria-live="polite">
+              <span>{label || "Working…"}</span>
+              <span>{Math.round(progress * 100)}%</span>
+              <div className="progress-track">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${progress * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
 
-      <button
-        className="primary"
-        type="button"
-        onClick={mode === "direct" ? startDirect : startCloud}
-        disabled={!validation.ok || busy || (mode === "direct" && !directSupported)}
-      >
-        {busy
-          ? "Working…"
-          : mode === "direct"
-            ? "Start direct transfer"
-            : "Create link"}
-      </button>
+          {error && (
+            <p className="error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <button
+            className="primary"
+            type="button"
+            onClick={mode === "direct" ? startDirect : startCloud}
+            disabled={
+              !validation.ok || busy || (mode === "direct" && !directSupported)
+            }
+          >
+            {busy
+              ? "Working…"
+              : mode === "direct"
+                ? "Start direct transfer"
+                : "Create link"}
+          </button>
+        </>
+      )}
     </Shell>
   );
 }
