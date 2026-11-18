@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import {
   HistoryStore,
@@ -7,12 +7,15 @@ import {
   encryptedSize,
   isP2pSupported,
   maxTotalSize,
+  parseReceiverQrLink,
   resolveApiBase,
   validateSelection,
 } from "../../engine/index.js";
 import { Shell } from "../Shell.jsx";
 import { createCloudShare } from "./cloud-send.js";
 import { startDirectShare } from "./direct-send.js";
+import { attachToPairedReceiver } from "./paired-receiver.js";
+import { isCameraScanSupported, scanReceiverCode } from "./scan-receiver.js";
 import { attachSenderCode, readSenderJoin } from "./sender-code.js";
 
 function formatBytes(bytes) {
@@ -54,6 +57,11 @@ export function SendScreen() {
   const [remaining, setRemaining] = useState(0);
   const [copied, setCopied] = useState(false);
   const [codeSession, setCodeSession] = useState(null);
+  const [pendingPair, setPendingPair] = useState(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scanError, setScanError] = useState("");
+  const videoRef = useRef(null);
+  const cancelScanRef = useRef(null);
 
   const directSupported = useMemo(() => isP2pSupported(), []);
   const validation = useMemo(
@@ -161,6 +169,46 @@ export function SendScreen() {
     };
   }, [result?.transferId, result?.key, result?.accessToken, result?.mode]);
 
+  useEffect(() => {
+    if (!scannerOpen) return undefined;
+    let cancelled = false;
+    const video = videoRef.current;
+    if (!video) return undefined;
+
+    scanReceiverCode(video, {
+      onCancel: (cleanup) => {
+        cancelScanRef.current = cleanup;
+      },
+    })
+      .then((raw) => {
+        if (cancelled) return;
+        if (!raw) {
+          setScannerOpen(false);
+          return;
+        }
+        const parsed = parseReceiverQrLink(new URL(raw));
+        if (!parsed.sessionId || !parsed.publicKeyB64) {
+          setScannerOpen(false);
+          setScanError("That QR code is not a LynkShare receiver code.");
+          return;
+        }
+        setPendingPair(parsed);
+        setScanError("");
+        setScannerOpen(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setScannerOpen(false);
+        setScanError(`Camera unavailable: ${err?.message ?? "permission denied"}`);
+      });
+
+    return () => {
+      cancelled = true;
+      cancelScanRef.current?.();
+      cancelScanRef.current = null;
+    };
+  }, [scannerOpen]);
+
   function reportProgress(event) {
     if (event.phase) setPhase(event.phase);
     if (typeof event.progress === "number") setProgress(event.progress);
@@ -194,6 +242,23 @@ export function SendScreen() {
     });
   }
 
+  async function deliverToPaired(api, share) {
+    if (!pendingPair) return false;
+    try {
+      await attachToPairedReceiver({
+        api,
+        pair: pendingPair,
+        transferId: share.transferId,
+        key: share.key,
+        accessToken: share.accessToken,
+      });
+      setPendingPair(null);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async function startCloud() {
     if (!validation.ok || busy) return;
     setError("");
@@ -202,16 +267,23 @@ export function SendScreen() {
     setProgress(0);
 
     try {
+      const api = new LynkApi({ baseUrl: resolveApiBase() });
       const share = await createCloudShare({
         files,
+        api,
         origin: window.location.origin,
         onProgress: reportProgress,
       });
+      const paired = await deliverToPaired(api, share);
 
       setResult({
         ...share,
         mode: "cloud",
-        status: "",
+        status: paired
+          ? "Sent to the paired phone."
+          : pendingPair
+            ? "Uploaded, but the paired phone did not confirm. Share the link instead."
+            : "",
         expiresAt: Date.now() + share.expiresIn * 1000,
       });
       setPhase("done");
@@ -276,6 +348,7 @@ export function SendScreen() {
       });
 
       if (delivered) {
+        setPendingPair(null);
         setPhase("done");
         updateStatus("Delivered directly. The receiver has every file.");
         recordSend(
@@ -287,8 +360,15 @@ export function SendScreen() {
         return;
       }
 
+      const paired = await deliverToPaired(api, share);
       setPhase("done");
-      updateStatus("Uploaded. The link now works from the cloud.");
+      updateStatus(
+        paired
+          ? "Sent to the paired phone."
+          : pendingPair
+            ? "Uploaded, but the paired phone did not confirm. Share the link instead."
+            : "Uploaded. The link now works from the cloud.",
+      );
       recordSend(
         session.transferId,
         share.fileNames,
@@ -495,6 +575,45 @@ export function SendScreen() {
             </li>
           ))}
         </ul>
+      )}
+
+      {isCameraScanSupported() && (
+        <div className="scan-row">
+          <button
+            className="secondary"
+            type="button"
+            onClick={() => {
+              setScanError("");
+              setScannerOpen(true);
+            }}
+            disabled={files.length === 0 || busy}
+          >
+            Scan their receiver code
+          </button>
+          {pendingPair && (
+            <p className="hint">
+              Paired with a receiver. The link attaches after the upload.
+            </p>
+          )}
+          {scanError && <p className="error">{scanError}</p>}
+        </div>
+      )}
+
+      {scannerOpen && (
+        <div className="scanner-card">
+          <video ref={videoRef} playsInline muted />
+          <p className="hint">Point the camera at the receiver QR code.</p>
+          <button
+            className="secondary"
+            type="button"
+            onClick={() => {
+              cancelScanRef.current?.();
+              setScannerOpen(false);
+            }}
+          >
+            Cancel
+          </button>
+        </div>
       )}
 
       <p

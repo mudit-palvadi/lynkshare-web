@@ -263,6 +263,20 @@ p {
   justify-items: start;
 }
 
+.scan-row,
+.scanner-card {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+}
+
+.scanner-card video {
+  width: 100%;
+  max-width: 28rem;
+  border-radius: 0.75rem;
+  background: #000;
+}
+
 .sender-code {
   margin: 0;
   font-size: 2rem;
