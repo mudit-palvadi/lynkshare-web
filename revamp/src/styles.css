@@ -163,6 +163,11 @@ p {
   border-radius: 1rem;
 }
 
+.drop-zone.drag-active {
+  border-color: #f4f4f5;
+  background: #18181b;
+}
+
 .file-input {
   position: absolute;
   width: 1px;
@@ -202,6 +207,29 @@ p {
   display: grid;
   gap: 0.15rem;
   min-width: 0;
+}
+
+.file-row .file-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.file-name-cell > span:last-child {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.file-badge {
+  flex: none;
+  padding: 0.15rem 0.35rem;
+  color: #a1a1aa;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: 1px solid #3f3f46;
+  border-radius: 0.35rem;
 }
 
 .file-row strong {
@@ -255,6 +283,33 @@ p {
   padding: 0.75rem;
   background: #fff;
   border-radius: 0.75rem;
+}
+
+.code-panel {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: start;
+}
+
+.scan-row,
+.scanner-card {
+  display: grid;
+  gap: 0.6rem;
+  justify-items: start;
+}
+
+.scanner-card video {
+  width: 100%;
+  max-width: 28rem;
+  border-radius: 0.75rem;
+  background: #000;
+}
+
+.sender-code {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.35em;
 }
 
 .site-header {

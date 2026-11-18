@@ -23,7 +23,9 @@ export function parseReceiverQrLink(url) {
     : "";
 
   const fragment = url.hash.startsWith("#") ? url.hash.slice(1) : url.hash;
-  const publicKeyB64 = fragment.startsWith("pk=") ? fragment.slice(3) : "";
+  const raw = fragment.startsWith("pk=") ? fragment.slice(3) : "";
+  // The receiver can advertise a version flag after the key: pk=KEY&v=2.
+  const publicKeyB64 = raw.split("&")[0].split("?")[0];
 
   return { sessionId, publicKeyB64 };
 }

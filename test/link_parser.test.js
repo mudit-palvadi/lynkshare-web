@@ -64,6 +64,13 @@ test("receiver QR link yields session id and pk", () => {
   assert.deepEqual(parsed, { sessionId: "rs9", publicKeyB64: "abc123DEF-_" });
 });
 
+test("the receiver version flag is not part of the public key", () => {
+  const parsed = parseReceiverQrLink(
+    new URL("https://lynkshare.app/receive/rs9#pk=abc123DEF-_&v=2"),
+  );
+  assert.deepEqual(parsed, { sessionId: "rs9", publicKeyB64: "abc123DEF-_" });
+});
+
 test("receiver QR link without pk degrades to empty string", () => {
   const parsed = parseReceiverQrLink(new URL("https://lynkshare.app/receive/rs9"));
   assert.deepEqual(parsed, { sessionId: "rs9", publicKeyB64: "" });

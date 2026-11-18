@@ -1,6 +1,8 @@
 import {
   decryptFileBytes,
+  isNotReadyError,
   safeFileName,
+  waitForTransferReady,
 } from "../../engine/index.js";
 
 export async function loadTransferMetadata({ api, transferId, accessToken }) {
@@ -20,9 +22,31 @@ export async function downloadShare({
   fetch = globalThis.fetch.bind(globalThis),
   save,
   onProgress = () => {},
+  waitForReady = false,
+  onWait = () => {},
+  readyTimeoutMs,
 }) {
-  const files = await api.getDownloadUrls(transferId, accessToken);
+  let files;
+  try {
+    files = await api.getDownloadUrls(transferId, accessToken);
+  } catch (err) {
+    if (!waitForReady || !isNotReadyError(err)) throw err;
+    onWait();
+    await waitForTransferReady({
+      api,
+      transferId,
+      accessToken,
+      timeoutMs: readyTimeoutMs,
+      onWait,
+    });
+    files = await api.getDownloadUrls(transferId, accessToken);
+  }
+
   const saved = [];
+
+  if (files.length === 0) {
+    throw new Error("no downloadable files");
+  }
 
   for (let i = 0; i < files.length; i += 1) {
     const file = files[i];

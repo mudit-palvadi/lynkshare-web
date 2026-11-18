@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   HistoryStore,
   LynkApi,
+  acquireReceiverOwnership,
+  isP2pSupported,
   parseFileFragment,
   resolveApiBase,
 } from "../../engine/index.js";
 import { Shell } from "../Shell.jsx";
 import { bootFragment } from "../boot-link.js";
+import { receiveDirectOnce } from "./receive-flow.js";
 import { downloadShare, loadTransferMetadata } from "./share-receive.js";
 
 function formatBytes(bytes) {
@@ -27,6 +30,16 @@ function saveToBrowser({ name, bytes }) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function describeFailure(err) {
+  if (err?.status === 409 || err?.name === "TransferStillUploadingError") {
+    return "The sender is still uploading. Wait a moment and try again.";
+  }
+  if (err?.status === 404 || err?.name === "TransferNotFoundError") {
+    return "Transfer not found or expired. Ask the sender for a fresh link.";
+  }
+  return "Download failed. Check your connection and try again.";
+}
+
 export function ShareScreen({ transferId }) {
   const link = useMemo(() => parseFileFragment(bootFragment), []);
   const [metadata, setMetadata] = useState(null);
@@ -34,7 +47,10 @@ export function ShareScreen({ transferId }) {
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const [label, setLabel] = useState("");
+  const [status, setStatus] = useState("");
   const [saved, setSaved] = useState([]);
+  const [partial, setPartial] = useState([]);
+  const cancelDirect = useRef(null);
 
   const hasKey = Boolean(link.key);
   const hasToken = Boolean(link.accessToken);
@@ -44,7 +60,7 @@ export function ShareScreen({ transferId }) {
   );
 
   useEffect(() => {
-    if (!hasKey || !hasToken) return;
+    if (!hasKey || !hasToken) return undefined;
     let cancelled = false;
     setBusy(true);
     loadTransferMetadata({ api, transferId, accessToken: link.accessToken })
@@ -64,12 +80,110 @@ export function ShareScreen({ transferId }) {
     };
   }, [api, hasKey, hasToken, link.accessToken, transferId]);
 
+  useEffect(() => {
+    const stop = () => cancelDirect.current?.();
+    window.addEventListener("pagehide", stop);
+    return () => {
+      window.removeEventListener("pagehide", stop);
+      cancelDirect.current?.();
+    };
+  }, []);
+
+  function record(names, statusText) {
+    new HistoryStore().add({
+      id: transferId,
+      type: "received",
+      fileNames: names,
+      totalSize: metadata?.total_size ?? 0,
+      timestamp: Date.now(),
+      status: statusText,
+    });
+  }
+
   async function download() {
-    if (!hasKey || !hasToken || busy) return;
+    if (!hasKey || !hasToken || busy || !metadata) return;
     setBusy(true);
     setError("");
     setProgress(0);
+    setStatus("");
+    setPartial([]);
+
     try {
+      if (metadata.status !== "ready" && isP2pSupported()) {
+        const apiBase = resolveApiBase();
+        const ownership = await acquireReceiverOwnership({
+          apiBase,
+          transferId,
+        });
+        if (ownership.status === "busy") {
+          setError(
+            "This transfer is already receiving in another tab. Finish or close that tab, then try again.",
+          );
+          return;
+        }
+
+        try {
+          const attempt = receiveDirectOnce({
+            apiBase,
+            transferId,
+            accessToken: link.accessToken,
+            aesKey: link.key,
+            expectedFiles: Math.max(
+              metadata.total_files ?? metadata.files?.length ?? 1,
+              1,
+            ),
+            expectedBytes:
+              metadata.total_size > 0
+                ? metadata.total_size + 1024
+                : undefined,
+            onStatus: (event, info) => {
+              if (event === "p2p-connected") {
+                setStatus("Connected. Receiving directly…");
+                setLabel("Receiving directly…");
+              } else if (event === "p2p-header" && info?.name) {
+                setLabel(`Receiving ${info.name}…`);
+              }
+            },
+            onProgress: ({ received, expected }) => {
+              if (expected > 0) {
+                setProgress(Math.min((received / expected) * 0.9, 0.9));
+                setLabel(
+                  `${formatBytes(received)} of ${formatBytes(expected)}`,
+                );
+              }
+            },
+            onSave: saveToBrowser,
+          });
+          cancelDirect.current = attempt.cancel;
+
+          try {
+            const result = await attempt.promise;
+            if (result.status === "cancelled") return;
+            if (result.status === "delivered") {
+              setSaved(result.names);
+              record(result.names, "completed (p2p)");
+              return;
+            }
+            if (result.names.length > 0) {
+              setPartial(result.names);
+              setError(
+                "Some files were handed to the browser. Check Downloads before retrying.",
+              );
+              return;
+            }
+          } finally {
+            cancelDirect.current = null;
+            await ownership.release?.();
+          }
+        } catch (err) {
+          setError(describeFailure(err));
+          return;
+        }
+
+        setStatus("Direct did not connect. Waiting for the sender's cloud copy…");
+      }
+
+      setLabel("Waiting for the sender…");
       const names = await downloadShare({
         api,
         transferId,
@@ -77,22 +191,17 @@ export function ShareScreen({ transferId }) {
         key: link.key,
         version: link.version,
         save: saveToBrowser,
+        waitForReady: metadata.status !== "ready",
+        onWait: () => setLabel("The sender is still uploading…"),
         onProgress: ({ progress: nextProgress, label: nextLabel }) => {
           setProgress(nextProgress);
-          setLabel(nextLabel);
+          if (nextLabel) setLabel(nextLabel);
         },
       });
       setSaved(names);
-      new HistoryStore().add({
-        id: transferId,
-        type: "received",
-        fileNames: names,
-        totalSize: metadata?.total_size ?? 0,
-        timestamp: Date.now(),
-        status: "completed (cloud)",
-      });
-    } catch {
-      setError("Download failed. Check your connection and try again.");
+      record(names, "completed (cloud)");
+    } catch (err) {
+      setError(describeFailure(err));
     } finally {
       setBusy(false);
     }
@@ -139,6 +248,35 @@ export function ShareScreen({ transferId }) {
     );
   }
 
+  if (partial.length > 0) {
+    return (
+      <Shell eyebrow="Receive" title="Some files were saved.">
+        <p className="hint">
+          The direct connection stopped after these files reached the browser.
+          Check Downloads before trying again.
+        </p>
+        <ul className="file-list">
+          {partial.map((name) => (
+            <li className="file-row" key={name}>
+              <strong>{name}</strong>
+            </li>
+          ))}
+        </ul>
+        <button
+          className="primary"
+          type="button"
+          onClick={() => {
+            setPartial([]);
+            setError("");
+            download();
+          }}
+        >
+          Retry
+        </button>
+      </Shell>
+    );
+  }
+
   const files = metadata?.files ?? [];
   const names = files.map((file) => file.file_name);
 
@@ -156,7 +294,9 @@ export function ShareScreen({ transferId }) {
           </p>
           {metadata.status !== "ready" && (
             <p className="hint" role="status">
-              The sender is still uploading. Try again in a moment.
+              {isP2pSupported()
+                ? "The sender is waiting for a direct connection. Save file starts it."
+                : "The sender is still uploading. Save file waits for the cloud copy."}
             </p>
           )}
         </>
@@ -166,7 +306,13 @@ export function ShareScreen({ transferId }) {
         </p>
       )}
 
-      {busy && label && (
+      {status && (
+        <p className="hint" role="status">
+          {status}
+        </p>
+      )}
+
+      {(busy && label) && (
         <div className="progress" role="status" aria-live="polite">
           <span>{label}</span>
           <span>{Math.round(progress * 100)}%</span>
@@ -182,7 +328,7 @@ export function ShareScreen({ transferId }) {
         className="primary"
         type="button"
         onClick={download}
-        disabled={busy || metadata?.status !== "ready"}
+        disabled={busy || !metadata}
       >
         {busy ? "Working…" : "Save file"}
       </button>
