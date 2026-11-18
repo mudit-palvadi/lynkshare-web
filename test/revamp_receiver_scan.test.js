@@ -63,6 +63,19 @@ test("the send screen offers receiver QR scanning and attaches after upload", ()
   assert.ok(source.includes("scanReceiverCode"));
   assert.ok(source.includes("parseReceiverQrLink"));
   assert.ok(source.includes("attachToPairedReceiver"));
-  assert.ok(source.includes("Scan their receiver code"));
+  assert.ok(source.includes("Scan receiver QR"));
   assert.ok(source.includes("<video"));
+});
+
+test("the send form asks for files before showing a method, and scans only after the transfer exists", () => {
+  assert.ok(
+    source.indexOf('id="send-files"') <
+      source.indexOf('aria-label="Transfer mode"'),
+  );
+  const resultBlock = source.indexOf("if (result)");
+  const formBlock = source.indexOf('title="You are sending."');
+  const scanButton = source.indexOf("Scan receiver QR");
+  assert.ok(scanButton > resultBlock);
+  assert.ok(scanButton < formBlock);
+  assert.equal(source.includes("Scan their receiver code"), false);
 });
