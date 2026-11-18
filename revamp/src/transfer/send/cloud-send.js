@@ -12,21 +12,8 @@ export function generateLegacyKey() {
     .join("");
 }
 
-/**
- * Encrypts every file, creates the transfer, uploads the ciphertext to the
- * presigned URLs and returns the share link. The link is returned to the
- * caller and never written to storage by this module.
- */
-export async function createCloudShare({
-  files,
-  key = generateLegacyKey(),
-  origin = globalThis.window?.location?.origin ?? "",
-  api = new LynkApi({ baseUrl: resolveApiBase() }),
-  fetch = globalThis.fetch.bind(globalThis),
-  onProgress = () => {},
-}) {
+export async function encryptSelection({ files, key, onProgress = () => {} }) {
   const encrypted = [];
-
   for (let i = 0; i < files.length; i += 1) {
     const file = files[i];
     onProgress({
@@ -41,20 +28,53 @@ export async function createCloudShare({
       blob: await encryptWithIvPrefix(plain, key),
     });
   }
+  return encrypted;
+}
 
+export async function createTransferSession({
+  api,
+  encrypted,
+  onProgress = () => {},
+}) {
   onProgress({
     phase: "uploading",
     progress: 0.25,
     label: "Creating the transfer…",
   });
-  const session = await api.createTransfer(
+  return api.createTransfer(
     encrypted.map((item) => ({
       name: item.name,
       size: item.blob.length,
       type: "application/octet-stream",
     })),
   );
+}
 
+export function buildShare({ session, key, origin, files }) {
+  return {
+    link: buildSendLink(
+      origin,
+      session.transferId,
+      key,
+      session.accessToken,
+    ),
+    key,
+    transferId: session.transferId,
+    senderSecret: session.senderSecret,
+    accessToken: session.accessToken,
+    expiresIn: session.expiresIn,
+    fileNames: files.map((file) => file.name),
+    totalSize: files.reduce((sum, file) => sum + file.size, 0),
+  };
+}
+
+export async function uploadEncrypted({
+  api,
+  fetch = globalThis.fetch.bind(globalThis),
+  encrypted,
+  session,
+  onProgress = () => {},
+}) {
   for (let i = 0; i < session.files.length; i += 1) {
     const target = session.files[i];
     onProgress({
@@ -79,23 +99,24 @@ export async function createCloudShare({
       label: `Uploaded ${target.fileName}`,
     });
   }
-
-  const link = buildSendLink(
-    origin,
-    session.transferId,
-    key,
-    session.accessToken,
-  );
   onProgress({ phase: "done", progress: 1, label: "Link ready" });
+}
 
-  return {
-    link,
-    key,
-    transferId: session.transferId,
-    senderSecret: session.senderSecret,
-    accessToken: session.accessToken,
-    expiresIn: session.expiresIn,
-    fileNames: files.map((file) => file.name),
-    totalSize: files.reduce((sum, file) => sum + file.size, 0),
-  };
+/**
+ * Encrypts every file, creates the transfer, uploads the ciphertext to the
+ * presigned URLs and returns the share link. The link is returned to the
+ * caller and never written to storage by this module.
+ */
+export async function createCloudShare({
+  files,
+  key = generateLegacyKey(),
+  origin = globalThis.window?.location?.origin ?? "",
+  api = new LynkApi({ baseUrl: resolveApiBase() }),
+  fetch = globalThis.fetch.bind(globalThis),
+  onProgress = () => {},
+}) {
+  const encrypted = await encryptSelection({ files, key, onProgress });
+  const session = await createTransferSession({ api, encrypted, onProgress });
+  await uploadEncrypted({ api, fetch, encrypted, session, onProgress });
+  return buildShare({ session, key, origin, files });
 }

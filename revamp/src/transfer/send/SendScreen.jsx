@@ -3,12 +3,16 @@ import { QRCodeSVG } from "qrcode.react";
 import {
   HistoryStore,
   LimitExceededError,
+  LynkApi,
   encryptedSize,
+  isP2pSupported,
   maxTotalSize,
+  resolveApiBase,
   validateSelection,
 } from "../../engine/index.js";
 import { Shell } from "../Shell.jsx";
 import { createCloudShare } from "./cloud-send.js";
+import { startDirectShare } from "./direct-send.js";
 
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
@@ -23,6 +27,7 @@ function formatTime(seconds) {
 
 export function SendScreen() {
   const [files, setFiles] = useState([]);
+  const [mode, setMode] = useState("cloud");
   const [phase, setPhase] = useState("idle");
   const [progress, setProgress] = useState(0);
   const [label, setLabel] = useState("");
@@ -31,6 +36,7 @@ export function SendScreen() {
   const [remaining, setRemaining] = useState(0);
   const [copied, setCopied] = useState(false);
 
+  const directSupported = useMemo(() => isP2pSupported(), []);
   const validation = useMemo(
     () => validateSelection(files, "cloud", false),
     [files],
@@ -43,12 +49,22 @@ export function SendScreen() {
 
   useEffect(() => {
     if (!result) return undefined;
-    const deadline = Date.now() + result.expiresIn * 1000;
-    const tick = () => setRemaining(Math.ceil((deadline - Date.now()) / 1000));
+    const tick = () =>
+      setRemaining(Math.ceil((result.expiresAt - Date.now()) / 1000));
     tick();
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
-  }, [result]);
+  }, [result?.expiresAt]);
+
+  function reportProgress(event) {
+    if (event.phase) setPhase(event.phase);
+    if (typeof event.progress === "number") setProgress(event.progress);
+    if (event.label) setLabel(event.label);
+  }
+
+  function updateStatus(status) {
+    setResult((current) => (current ? { ...current, status } : current));
+  }
 
   function addFiles(incoming) {
     const next = [...files, ...Array.from(incoming ?? [])];
@@ -62,7 +78,18 @@ export function SendScreen() {
     setFiles(files.filter((_, i) => i !== index));
   }
 
-  async function createCloudLink() {
+  function recordSend(transferId, names, totalSize, status) {
+    new HistoryStore().add({
+      id: transferId,
+      type: "sent",
+      fileNames: names,
+      totalSize,
+      timestamp: Date.now(),
+      status,
+    });
+  }
+
+  async function startCloud() {
     if (!validation.ok || busy) return;
     setError("");
     setCopied(false);
@@ -73,26 +100,22 @@ export function SendScreen() {
       const share = await createCloudShare({
         files,
         origin: window.location.origin,
-        onProgress: ({ phase: nextPhase, progress: nextProgress, label: nextLabel }) => {
-          setPhase(nextPhase);
-          setProgress(nextProgress);
-          setLabel(nextLabel);
-        },
+        onProgress: reportProgress,
       });
 
       setResult({
-        link: share.link,
-        transferId: share.transferId,
-        expiresIn: share.expiresIn,
+        ...share,
+        mode: "cloud",
+        status: "",
+        expiresAt: Date.now() + share.expiresIn * 1000,
       });
-      new HistoryStore().add({
-        id: share.transferId,
-        type: "sent",
-        fileNames: share.fileNames,
-        totalSize: share.totalSize,
-        timestamp: Date.now(),
-        status: "completed (cloud)",
-      });
+      setPhase("done");
+      recordSend(
+        share.transferId,
+        share.fileNames,
+        share.totalSize,
+        "completed (cloud)",
+      );
     } catch (err) {
       setPhase("idle");
       setLabel("");
@@ -105,13 +128,105 @@ export function SendScreen() {
     }
   }
 
+  async function startDirect() {
+    if (!validation.ok || busy || !directSupported) return;
+    setError("");
+    setCopied(false);
+    setPhase("encrypting");
+    setProgress(0);
+
+    try {
+      const api = new LynkApi({ baseUrl: resolveApiBase() });
+      const { delivered, session, share } = await startDirectShare({
+        files,
+        origin: window.location.origin,
+        api,
+        apiBase: resolveApiBase(),
+        onProgress: reportProgress,
+        onReady: (ready) => {
+          setResult({
+            ...ready,
+            mode: "direct",
+            status: "Waiting for the receiver to connect…",
+            expiresAt: Date.now() + ready.expiresIn * 1000,
+          });
+          setPhase("waiting");
+        },
+        onStatus: (event, detail) => {
+          if (event === "p2p-connected") {
+            updateStatus("Receiver connected. Sending directly…");
+          } else if (event === "p2p-sending") {
+            updateStatus(`Sending ${detail?.name ?? "files"} directly…`);
+          } else if (event === "p2p-confirming") {
+            updateStatus("Waiting for the receiver to confirm every file…");
+          } else if (event === "p2p-delivered") {
+            updateStatus("Delivered directly.");
+          } else if (
+            typeof event === "string" &&
+            event.startsWith("p2p-failed")
+          ) {
+            updateStatus("Direct failed — uploading the cloud copy…");
+          }
+        },
+      });
+
+      if (delivered) {
+        setPhase("done");
+        updateStatus("Delivered directly. The receiver has every file.");
+        recordSend(
+          session.transferId,
+          share.fileNames,
+          share.totalSize,
+          "completed (p2p)",
+        );
+        return;
+      }
+
+      setPhase("done");
+      updateStatus("Uploaded. The link now works from the cloud.");
+      recordSend(
+        session.transferId,
+        share.fileNames,
+        share.totalSize,
+        "completed (cloud)",
+      );
+    } catch (err) {
+      setPhase("idle");
+      setLabel("");
+      setProgress(0);
+      setResult(null);
+      setError(
+        err instanceof LimitExceededError
+          ? err.message
+          : "Transfer failed — check your connection and try again.",
+      );
+    }
+  }
+
   async function copyLink() {
     if (!result) return;
     try {
       await navigator.clipboard.writeText(result.link);
       setCopied(true);
     } catch {
-      setError("Could not copy the link. Try again.");
+      window.prompt("Copy this link:", result.link);
+    }
+  }
+
+  async function extendSession() {
+    if (!result) return;
+    try {
+      const extended = await new LynkApi({
+        baseUrl: resolveApiBase(),
+      }).extendTransfer(result.transferId, result.senderSecret);
+      setResult((current) => ({
+        ...current,
+        expiresIn: extended.expiresIn,
+        expiresAt: Date.now() + extended.expiresIn * 1000,
+        status: "Session extended.",
+      }));
+    } catch {
+      updateStatus("Could not extend the session.");
     }
   }
 
@@ -126,13 +241,38 @@ export function SendScreen() {
             Scan this code, or copy the link. The key stays in the link
             fragment.
           </p>
+          {result.status && (
+            <p className="hint" role="status">
+              {result.status}
+            </p>
+          )}
           <p className="hint" role="status">
             {remaining > 0
               ? `Session ends in ${formatTime(remaining)}.`
               : "This session has expired."}
           </p>
+          {phase === "uploading" && (
+            <div className="progress" role="status" aria-live="polite">
+              <span>{label || "Uploading…"}</span>
+              <span>{Math.round(progress * 100)}%</span>
+              <div className="progress-track">
+                <div
+                  className="progress-fill"
+                  style={{ width: `${progress * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
           <button className="primary" type="button" onClick={copyLink}>
             {copied ? "Link copied" : "Copy link"}
+          </button>
+          <button
+            className="secondary"
+            type="button"
+            onClick={extendSession}
+            disabled={remaining <= 0}
+          >
+            Extend to 30 minutes
           </button>
           <p className="hint">Leave this tab open. A reload needs a new link.</p>
           <button
@@ -156,14 +296,32 @@ export function SendScreen() {
 
   return (
     <Shell eyebrow="Send" title="You are sending.">
-      <p className="lead">Up to {maxTotalSize("cloud", false) / (1024 * 1024)} MB on the web.</p>
+      <p className="lead">
+        Up to {maxTotalSize("cloud", false) / (1024 * 1024)} MB on the web.
+      </p>
 
       <div className="choices" role="group" aria-label="Transfer mode">
-        <button className="choice" type="button" disabled>
+        <button
+          className={mode === "direct" ? "choice choice-selected" : "choice"}
+          type="button"
+          onClick={() => setMode("direct")}
+          disabled={busy || !directSupported}
+          aria-pressed={mode === "direct"}
+        >
           <strong>Direct</strong>
-          <span>Direct transfer is next. Cloud is available now.</span>
+          <span>
+            {directSupported
+              ? "Both devices connect and the file streams peer to peer. Falls back to Cloud."
+              : "Direct needs WebRTC in this browser. Use Cloud instead."}
+          </span>
         </button>
-        <button className="choice choice-selected" type="button" aria-pressed="true">
+        <button
+          className={mode === "cloud" ? "choice choice-selected" : "choice"}
+          type="button"
+          onClick={() => setMode("cloud")}
+          disabled={busy}
+          aria-pressed={mode === "cloud"}
+        >
           <strong>Cloud</strong>
           <span>The link works while the 10-minute session is open.</span>
         </button>
@@ -214,7 +372,10 @@ export function SendScreen() {
         </ul>
       )}
 
-      <p className={validation.ok || files.length === 0 ? "hint" : "error"} role="status">
+      <p
+        className={validation.ok || files.length === 0 ? "hint" : "error"}
+        role="status"
+      >
         {files.length === 0
           ? "Pick at least one file."
           : validation.ok
@@ -232,15 +393,23 @@ export function SendScreen() {
         </div>
       )}
 
-      {error && <p className="error" role="alert">{error}</p>}
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
 
       <button
         className="primary"
         type="button"
-        onClick={createCloudLink}
-        disabled={!validation.ok || busy}
+        onClick={mode === "direct" ? startDirect : startCloud}
+        disabled={!validation.ok || busy || (mode === "direct" && !directSupported)}
       >
-        {busy ? "Working…" : "Create link"}
+        {busy
+          ? "Working…"
+          : mode === "direct"
+            ? "Start direct transfer"
+            : "Create link"}
       </button>
     </Shell>
   );
