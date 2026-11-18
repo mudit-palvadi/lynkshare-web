@@ -36,9 +36,7 @@ function fileBadge(name) {
 
 function codeStatusText(session) {
   if (!session) return "";
-  if (session.status === "waiting") {
-    return "Waiting for the receiver to enter this code.";
-  }
+  if (session.status === "waiting") return "";
   if (session.status === "attaching") {
     return "Receiver joined — handing over the key…";
   }
@@ -65,6 +63,9 @@ export function SendScreen() {
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scanError, setScanError] = useState("");
   const [dragging, setDragging] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const [notice, setNotice] = useState("");
   const videoRef = useRef(null);
   const cancelScanRef = useRef(null);
 
@@ -229,6 +230,7 @@ export function SendScreen() {
     setFiles(next);
     setCopied(false);
     setError("");
+    setNotice("");
   }
 
   function removeFile(index) {
@@ -245,6 +247,20 @@ export function SendScreen() {
       timestamp: Date.now(),
       status,
     });
+  }
+
+  function resetSendForm(message = "") {
+    setResult(null);
+    setFiles([]);
+    setPhase("idle");
+    setProgress(0);
+    setLabel("");
+    setCopied(false);
+    setCodeSession(null);
+    setConfirmClose(false);
+    setScanError("");
+    setScannerOpen(false);
+    setNotice(message);
   }
 
   async function attachScannedReceiver(pair) {
@@ -407,6 +423,26 @@ export function SendScreen() {
     }
   }
 
+  async function closeSession() {
+    if (!result || closing) return;
+    setClosing(true);
+    try {
+      const api = new LynkApi({ baseUrl: resolveApiBase() });
+      await api.cancelTransfer(result.transferId, result.senderSecret);
+      if (codeSession?.sessionId && codeSession?.senderSecret) {
+        await api
+          .cancelSenderSession(codeSession.sessionId, codeSession.senderSecret)
+          .catch(() => {});
+      }
+      resetSendForm("Session closed.");
+    } catch {
+      updateStatus("Could not close the session. Try again.");
+      setConfirmClose(false);
+    } finally {
+      setClosing(false);
+    }
+  }
+
   if (result) {
     return (
       <Shell eyebrow="Send" title="They can open this link.">
@@ -414,10 +450,7 @@ export function SendScreen() {
           <div className="qr" aria-label="Share link QR code">
             <QRCodeSVG value={result.link} size={220} level="M" />
           </div>
-          <p className="hint">
-            Scan this code, or copy the link. The key stays in the link
-            fragment.
-          </p>
+          <p className="hint">Scan this code, or copy the link.</p>
           {result.status && (
             <p className="hint" role="status">
               {result.status}
@@ -434,14 +467,16 @@ export function SendScreen() {
               <p className="sender-code" aria-label="Six-digit code">
                 {codeSession.code}
               </p>
-              <p
-                className={
-                  codeSession.status === "error" ? "error" : "hint"
-                }
-                role="status"
-              >
-                {codeStatusText(codeSession)}
-              </p>
+              {codeStatusText(codeSession) && (
+                <p
+                  className={
+                    codeSession.status === "error" ? "error" : "hint"
+                  }
+                  role="status"
+                >
+                  {codeStatusText(codeSession)}
+                </p>
+              )}
               {codeSession.fingerprint && (
                 <p className="hint">Key check {codeSession.fingerprint}</p>
               )}
@@ -501,19 +536,42 @@ export function SendScreen() {
           >
             Extend to 30 minutes
           </button>
+          {!confirmClose ? (
+            <button
+              className="secondary"
+              type="button"
+              onClick={() => setConfirmClose(true)}
+            >
+              Close session
+            </button>
+          ) : (
+            <div className="close-panel">
+              <p className="hint">Close this session for everyone?</p>
+              <div className="actions">
+                <button
+                  className="secondary"
+                  type="button"
+                  onClick={() => setConfirmClose(false)}
+                  disabled={closing}
+                >
+                  Keep open
+                </button>
+                <button
+                  className="secondary"
+                  type="button"
+                  onClick={closeSession}
+                  disabled={closing}
+                >
+                  {closing ? "Closing…" : "Close session"}
+                </button>
+              </div>
+            </div>
+          )}
           <p className="hint">Leave this tab open. A reload needs a new link.</p>
           <button
             className="secondary"
             type="button"
-            onClick={() => {
-              setResult(null);
-              setFiles([]);
-              setPhase("idle");
-              setProgress(0);
-              setLabel("");
-              setCopied(false);
-              setCodeSession(null);
-            }}
+            onClick={() => resetSendForm()}
           >
             Create another
           </button>
@@ -527,6 +585,12 @@ export function SendScreen() {
       <p className="lead">
         Up to {maxTotalSize("cloud", false) / (1024 * 1024)} MB on the web.
       </p>
+
+      {notice && (
+        <p className="hint" role="status">
+          {notice}
+        </p>
+      )}
 
       <div
         className={dragging ? "drop-zone drag-active" : "drop-zone"}

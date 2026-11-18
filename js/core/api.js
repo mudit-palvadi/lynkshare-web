@@ -94,6 +94,13 @@ export class LynkApi {
     return { transferId: json.transfer_id, status: json.status, expiresIn: json.expires_in };
   }
 
+  async cancelTransfer(transferId, senderSecret) {
+    return this.request(
+      `${this.baseUrl}/api/v1/transfers/${encodeURIComponent(transferId)}`,
+      { method: "DELETE", headers: capabilityHeaders("X-Lynk-Sender-Secret", senderSecret) },
+    );
+  }
+
   async createReceiverSession() {
     const json = await this.request(`${this.baseUrl}/api/v1/receiver-sessions`, {
       method: "POST",
@@ -188,6 +195,13 @@ export class LynkApi {
           mode,
         }),
       },
+    );
+  }
+
+  async cancelSenderSession(sessionId, senderSecret) {
+    return this.request(
+      `${this.baseUrl}/api/v1/sender-sessions/${encodeURIComponent(sessionId)}`,
+      { method: "DELETE", headers: capabilityHeaders("X-Lynk-Sender-Secret", senderSecret) },
     );
   }
 
