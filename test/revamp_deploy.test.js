@@ -25,6 +25,12 @@ test("the deployed headers keep the site on HTTPS and the key realm strict", () 
   assert.equal(headers.includes("unsafe-eval"), false);
   assert.ok(headers.includes("connect-src 'self' https://api.lynkshare.app"));
   assert.ok(headers.includes("frame-ancestors 'none'"));
+  assert.ok(headers.includes("/send/*"));
+  assert.ok(headers.includes("/receive/*"));
+  assert.equal(
+    (headers.match(/X-Robots-Tag: noindex, nofollow/g) ?? []).length,
+    2,
+  );
 });
 
 test("the built redirects keep the clean content URLs", () => {

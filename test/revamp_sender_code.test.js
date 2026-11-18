@@ -90,3 +90,11 @@ test("the send result renders the code and polling state", () => {
   assert.ok(source.includes("{codeSession.code}"));
   assert.ok(source.includes("Key check"));
 });
+
+test("the sender confirms the receiver before wrapping the code key", () => {
+  assert.ok(source.includes('status: "joined"'));
+  assert.ok(source.includes("Share with this device"));
+  assert.ok(source.includes("Not this device"));
+  assert.equal((source.match(/attachSenderCode\(\{/g) ?? []).length, 1);
+  assert.ok(source.includes("cancelSenderSession"));
+});
