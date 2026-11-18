@@ -334,9 +334,6 @@ export function ShareScreen({ transferId }) {
       >
         {busy ? "Working…" : "Save file"}
       </button>
-      <p className="hint">
-        The key is read from the original link and never stored.
-      </p>
     </Shell>
   );
 }

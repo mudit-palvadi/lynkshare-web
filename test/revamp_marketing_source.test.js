@@ -9,6 +9,10 @@ const source = readFileSync(
   join(root, "revamp/src/marketing/main.jsx"),
   "utf8",
 );
+const share = readFileSync(
+  join(root, "revamp/src/transfer/receive/ShareScreen.jsx"),
+  "utf8",
+);
 
 test("the marketing page carries the app link and both transfer actions without a dialog", () => {
   assert.ok(source.includes("Get LynkShare for Android"));
@@ -33,6 +37,11 @@ test("the marketing page avoids unsupported claims", () => {
   ]) {
     assert.equal(claim.test(source), false, `found ${claim}`);
   }
+});
+
+test("the public pages avoid key-fragment jargon", () => {
+  assert.equal(source.includes("link fragment"), false);
+  assert.equal(share.includes("The key is read from the original link"), false);
 });
 
 test("recent activity uses the tab store and renders names as text", () => {

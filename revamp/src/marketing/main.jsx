@@ -117,7 +117,7 @@ export function MarketingApp() {
           <div className="feature-grid">
             <article>
               <h3>Encrypted on your device</h3>
-              <p>The key stays in the link fragment and is not sent to the server.</p>
+              <p>Only the people with the link can unlock the file.</p>
             </article>
             <article>
               <h3>Direct when it can be</h3>
@@ -165,8 +165,8 @@ export function MarketingApp() {
           </p>
           <h3>Where does the key go?</h3>
           <p>
-            The key is created on the sending device and stays in the link
-            fragment. It is not stored by the service.
+            The file is locked on the sending device and unlocked on the
+            receiving device. LynkShare cannot open it.
           </p>
           <h3>What is the web size limit?</h3>
           <p>10 MB total per transfer, with at most 10 files.</p>
