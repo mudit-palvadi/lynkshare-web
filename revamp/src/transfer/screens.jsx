@@ -1,45 +1,24 @@
 import { useEffect } from "react";
 import { Shell } from "./Shell.jsx";
 export { SendScreen } from "./send/SendScreen.jsx";
+export { ReceiveScreen } from "./receive/ReceiveScreen.jsx";
 export { ShareScreen } from "./receive/ShareScreen.jsx";
-
-export function ReceiveScreen() {
-  return (
-    <Shell eyebrow="Receive" title="You are receiving.">
-      <div className="field">
-        <label htmlFor="receive-code">Their code</label>
-        <input
-          id="receive-code"
-          type="text"
-          inputMode="numeric"
-          autoComplete="off"
-          maxLength={6}
-          placeholder=""
-        />
-        <p className="hint">Six digits. Ask the sender for the code.</p>
-      </div>
-      <button className="primary" type="button">
-        Continue
-      </button>
-      <button className="secondary" type="button">
-        Show my code
-      </button>
-      <p className="hint">
-        The other person scans this screen. If they sent a link, open that link
-        instead.
-      </p>
-    </Shell>
-  );
-}
 
 export function PairingScreen({ route }) {
   return (
-    <Shell eyebrow="Pair" title="Waiting for them to confirm.">
-      <p className="lead">Session {route.sessionId}</p>
-      <p className="hint">
-        The wrapped key is not released until the sender confirms this device.
+    <Shell eyebrow="Receive" title="This is a receiver code.">
+      <p className="lead">
+        The sender scans this code from their own device. The files attach to
+        the receiver screen that created it.
       </p>
-      <p className="hint">Public key fingerprint: {route.publicKey.slice(0, 8)}…</p>
+      <p className="hint">
+        If you created this code, return to that tab and keep it open. If you
+        opened someone else's code, ask them for the transfer link instead.
+      </p>
+      <p className="hint">Session {route.sessionId}</p>
+      <a className="secondary" href="/receive">
+        Start a new receiver code
+      </a>
     </Shell>
   );
 }
