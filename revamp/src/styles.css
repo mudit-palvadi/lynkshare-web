@@ -131,6 +131,11 @@ p {
   border: 1px solid #f4f4f5;
 }
 
+a.primary {
+  display: inline-block;
+  text-decoration: none;
+}
+
 .secondary {
   color: #f4f4f5;
   background: transparent;
