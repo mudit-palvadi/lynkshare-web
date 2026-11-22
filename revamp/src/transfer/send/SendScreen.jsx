@@ -37,11 +37,8 @@ function fileBadge(name) {
 function codeStatusText(session) {
   if (!session) return "";
   if (session.status === "waiting") return "";
-  if (session.status === "joined") {
-    return "A device joined. Check the key below, then choose whether to share.";
-  }
   if (session.status === "attaching") {
-    return "Sharing the key with this device…";
+    return "A device joined — sharing the key…";
   }
   if (session.status === "attached") {
     return "Receiver joined — files unlocked.";
@@ -119,7 +116,7 @@ export function SendScreen() {
         expiryTimer = window.setTimeout(() => {
           if (cancelled) return;
           setCodeSession((current) =>
-            current?.status === "waiting" || current?.status === "joined"
+            current?.status === "waiting"
               ? { ...current, status: "expired", receiverPk: null }
               : current,
           );
@@ -138,12 +135,34 @@ export function SendScreen() {
                 current
                   ? {
                       ...current,
-                      status: "joined",
+                      status: "attaching",
                       fingerprint: join.fingerprint,
                       receiverPk: join.receiverPk,
                     }
                   : current,
               );
+              try {
+                await attachSenderCode({
+                  api,
+                  session,
+                  transferId: result.transferId,
+                  key: result.key,
+                  accessToken: result.accessToken,
+                  mode: result.mode === "direct" ? "p2p" : "cloud",
+                  receiverPk: join.receiverPk,
+                });
+                if (!cancelled) {
+                  setCodeSession((current) =>
+                    current ? { ...current, status: "attached" } : current,
+                  );
+                }
+              } catch {
+                if (!cancelled) {
+                  setCodeSession((current) =>
+                    current ? { ...current, status: "error" } : current,
+                  );
+                }
+              }
               return;
             }
           } catch {
@@ -419,52 +438,6 @@ export function SendScreen() {
     }
   }
 
-  async function shareWithCodeDevice() {
-    if (!result || !codeSession?.receiverPk) return;
-    setCodeSession((current) =>
-      current ? { ...current, status: "attaching" } : current,
-    );
-    try {
-      await attachSenderCode({
-        api: new LynkApi({ baseUrl: resolveApiBase() }),
-        session: codeSession,
-        transferId: result.transferId,
-        key: result.key,
-        accessToken: result.accessToken,
-        mode: result.mode === "direct" ? "p2p" : "cloud",
-        receiverPk: codeSession.receiverPk,
-      });
-      setCodeSession((current) =>
-        current ? { ...current, status: "attached" } : current,
-      );
-    } catch {
-      setCodeSession((current) =>
-        current ? { ...current, status: "error" } : current,
-      );
-    }
-  }
-
-  async function rejectCodeDevice() {
-    if (!codeSession?.sessionId) return;
-    setCodeSession((current) =>
-      current ? { ...current, status: "cancelling" } : current,
-    );
-    try {
-      await new LynkApi({
-        baseUrl: resolveApiBase(),
-      }).cancelSenderSession(codeSession.sessionId, codeSession.senderSecret);
-      setCodeSession((current) =>
-        current
-          ? { ...current, status: "cancelled", code: "", receiverPk: null }
-          : current,
-      );
-    } catch {
-      setCodeSession((current) =>
-        current ? { ...current, status: "error" } : current,
-      );
-    }
-  }
-
   async function closeSession() {
     if (!result || closing) return;
     setClosing(true);
@@ -525,24 +498,6 @@ export function SendScreen() {
               )}
               {codeSession.fingerprint && (
                 <p className="hint">Key check {codeSession.fingerprint}</p>
-              )}
-              {codeSession.status === "joined" && (
-                <div className="actions">
-                  <button
-                    className="primary"
-                    type="button"
-                    onClick={shareWithCodeDevice}
-                  >
-                    Share with this device
-                  </button>
-                  <button
-                    className="secondary"
-                    type="button"
-                    onClick={rejectCodeDevice}
-                  >
-                    Not this device
-                  </button>
-                </div>
               )}
             </div>
           )}

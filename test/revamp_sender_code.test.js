@@ -83,18 +83,25 @@ test("the sender wraps the key and attaches it with the transfer mode", async ()
   ]);
 });
 
-test("the send result renders the code and polling state", () => {
+test("the sender attaches the key as soon as a receiver joins", () => {
   assert.ok(source.includes("createSenderSession"));
   assert.ok(source.includes("readSenderJoin"));
   assert.ok(source.includes("attachSenderCode"));
-  assert.ok(source.includes("{codeSession.code}"));
-  assert.ok(source.includes("Key check"));
+  assert.equal(source.includes('status: "joined"'), false);
+  assert.equal(source.includes("Share with this device"), false);
+  assert.equal(source.includes("Not this device"), false);
+  assert.equal((source.match(/attachSenderCode\(\{/g) ?? []).length, 1);
+  assert.match(
+    source,
+    /if \(join\) \{[\s\S]*?status: "attaching"[\s\S]*?attachSenderCode\(\{/,
+  );
+  assert.ok(source.includes("cancelSenderSession"));
 });
 
-test("the sender confirms the receiver before wrapping the code key", () => {
-  assert.ok(source.includes('status: "joined"'));
-  assert.ok(source.includes("Share with this device"));
-  assert.ok(source.includes("Not this device"));
-  assert.equal((source.match(/attachSenderCode\(\{/g) ?? []).length, 1);
-  assert.ok(source.includes("cancelSenderSession"));
+test("the code panel keeps the key check as information, not a gate", () => {
+  assert.ok(source.includes("{codeSession.code}"));
+  assert.ok(source.includes("Key check"));
+  assert.ok(source.includes('status: "attached"'));
+  assert.ok(source.includes("A device joined — sharing the key…"));
+  assert.ok(source.includes("Receiver joined — files unlocked."));
 });

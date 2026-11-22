@@ -1,8 +1,17 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { encryptWithIvPrefix } from "../revamp/src/engine/index.js";
 import { receiveDirectOnce } from "../revamp/src/transfer/receive/receive-flow.js";
 import { downloadShare } from "../revamp/src/transfer/receive/share-receive.js";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const shareSource = readFileSync(
+  join(root, "revamp/src/transfer/receive/ShareScreen.jsx"),
+  "utf8",
+);
 
 test("a direct receive saves sanitized names and completes", async () => {
   const saved = [];
@@ -147,4 +156,32 @@ test("the cloud path waits for a sender that is still uploading", async () => {
     ["downloads", 2],
   ]);
   assert.equal(new TextDecoder().decode(saved[0].bytes), "hello");
+});
+
+test("a delivered direct receive renders the completion screen", () => {
+  assert.ok(shareSource.includes("result.status === \"delivered\""));
+  assert.ok(shareSource.includes("setDirect(true)"));
+  assert.ok(shareSource.includes("saved.length > 0 && direct"));
+  assert.ok(shareSource.includes('title="Transfer completed successfully"'));
+  assert.ok(shareSource.includes("All files were received and verified."));
+  assert.ok(shareSource.includes("Back to Home"));
+  assert.ok(shareSource.includes('href="/"'));
+
+  const directStart = shareSource.indexOf("saved.length > 0 && direct");
+  const cloudStart = shareSource.indexOf('title="Saved."');
+  assert.ok(directStart >= 0);
+  assert.ok(cloudStart > directStart);
+});
+
+test("a cloud receive keeps the Saved screen and clears direct", () => {
+  assert.ok(shareSource.includes("setDirect(false)"));
+  assert.ok(shareSource.includes('record(names, "completed (cloud)")'));
+  assert.ok(shareSource.includes('title="Saved."'));
+});
+
+test("a partial direct receive keeps the partial warning, not the success screen", () => {
+  assert.ok(shareSource.includes("setPartial(result.names)"));
+  assert.ok(shareSource.includes('title="Some files were saved."'));
+  assert.ok(shareSource.includes("saved.length > 0 && direct"));
+  assert.ok(shareSource.includes("Retry"));
 });

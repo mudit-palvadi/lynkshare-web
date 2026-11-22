@@ -51,6 +51,7 @@ export function ShareScreen({ transferId }) {
   const [status, setStatus] = useState("");
   const [saved, setSaved] = useState([]);
   const [partial, setPartial] = useState([]);
+  const [direct, setDirect] = useState(false);
   const cancelDirect = useRef(null);
 
   const hasKey = Boolean(link.key);
@@ -108,6 +109,7 @@ export function ShareScreen({ transferId }) {
     setProgress(0);
     setStatus("");
     setPartial([]);
+    setDirect(false);
 
     try {
       if (metadata.status !== "ready" && isP2pSupported()) {
@@ -161,6 +163,7 @@ export function ShareScreen({ transferId }) {
             const result = await attempt.promise;
             if (result.status === "cancelled") return;
             if (result.status === "delivered") {
+              setDirect(true);
               setSaved(result.names);
               record(result.names, "completed (p2p)");
               return;
@@ -199,6 +202,7 @@ export function ShareScreen({ transferId }) {
           if (nextLabel) setLabel(nextLabel);
         },
       });
+      setDirect(false);
       setSaved(names);
       record(names, "completed (cloud)");
     } catch (err) {
@@ -224,6 +228,24 @@ export function ShareScreen({ transferId }) {
         <p className="error">
           This link is missing its access token. Ask the sender for a fresh link.
         </p>
+      </Shell>
+    );
+  }
+
+  if (saved.length > 0 && direct) {
+    return (
+      <Shell eyebrow="Receive" title="Transfer completed successfully">
+        <p className="lead">All files were received and verified.</p>
+        <ul className="file-list">
+          {saved.map((name) => (
+            <li className="file-row" key={name}>
+              <strong>{name}</strong>
+            </li>
+          ))}
+        </ul>
+        <a className="primary" href="/">
+          Back to Home
+        </a>
       </Shell>
     );
   }
