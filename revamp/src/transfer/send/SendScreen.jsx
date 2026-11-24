@@ -390,6 +390,7 @@ export function SendScreen() {
         return;
       }
 
+      setResult((current) => (current ? { ...current, mode: "cloud" } : current));
       setPhase("done");
       updateStatus("Uploaded. The link now works from the cloud.");
       recordSend(

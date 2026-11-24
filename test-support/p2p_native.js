@@ -15,6 +15,7 @@ export function barrier() {
 
 export function nativeBoundary(t) {
   let socket, peer, channel;
+  let opened = false;
   function replace(name, value) {
     const previous = Object.getOwnPropertyDescriptor(globalThis, name);
     Object.defineProperty(globalThis, name, { configurable: true, value });
@@ -50,8 +51,18 @@ export function nativeBoundary(t) {
     close() {}
   });
   return {
+    openSocket() {
+      if (!opened) {
+        opened = true;
+        socket.onopen();
+      }
+      return socket;
+    },
     async openSender(hello = { t: "hi", v: 2, receipts: true }) {
-      socket.onopen();
+      if (!opened) {
+        opened = true;
+        socket.onopen();
+      }
       await flush();
       channel.onopen();
       if (hello) channel.onmessage({ data: JSON.stringify(hello) });

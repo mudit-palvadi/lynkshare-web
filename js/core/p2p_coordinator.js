@@ -18,13 +18,23 @@ export class P2pCoordinator {
     this.#onP2PFailed = onP2PFailed;
   }
 
-  async start({ role }) {
+  async start({ role, armTimeout = true }) {
     if (this.#disposed) return;
-    this.#timer = setTimeout(() => this.#onTimeout(), this.#timeoutMs);
+    if (armTimeout) this.armTimeout();
     if (role === "sender") {
       const offer = await this.#actions.createOffer();
       await this.#actions.sendSignaling(offer);
     }
+  }
+
+  /// Starts or restarts the connection timeout fuse.
+  ///
+  /// A sender can wait for a receiver without arming this fuse, then call
+  /// [armTimeout] when a peer answers or the data channel opens.
+  armTimeout() {
+    if (this.#disposed) return;
+    if (this.#timer !== null) clearTimeout(this.#timer);
+    this.#timer = setTimeout(() => this.#onTimeout(), this.#timeoutMs);
   }
 
   async handleMessage(message) {

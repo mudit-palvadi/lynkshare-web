@@ -83,3 +83,40 @@ test("queuing all frames without a receiver receipt is not delivery", async (t) 
   assert.equal(channel.closed, false);
   assert.ok(!events.includes("p2p-delivered"));
 });
+
+test("a sender waits for the receiver before starting the connection clock", async (t) => {
+  const native = nativeBoundary(t);
+  let settled = false;
+  const sending = sendViaP2p({
+    apiBase: "https://example.invalid", sessionId: "test-room",
+    files: [{ name: "test.txt", blob: new Uint8Array([1, 2, 3]) }],
+    waitForPeerMs: 100,
+    connectionTimeoutMs: 15,
+    helloTimeoutMs: 15,
+    confirmationTimeoutMs: 15,
+  }).then((result) => { settled = true; return result; });
+
+  native.openSocket();
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  assert.equal(settled, false, "no receiver yet, but the connection clock has not started");
+
+  const channel = await native.openSender();
+  t.after(async () => { channel.onerror(); await sending; });
+  assert.equal(await sending, false, "the missing receipt still fails the send");
+  assert.equal(channel.closed, true);
+});
+
+test("no receiver within the wait window falls back once", async (t) => {
+  const native = nativeBoundary(t);
+  const events = [];
+  const sending = sendViaP2p({
+    apiBase: "https://example.invalid", sessionId: "test-room",
+    files: [{ name: "test.txt", blob: new Uint8Array([1, 2, 3]) }],
+    waitForPeerMs: 15,
+    onStatus: (event) => events.push(event),
+  });
+
+  native.openSocket();
+  assert.equal(await sending, false);
+  assert.ok(events.includes("p2p-failed:no-receiver"));
+});

@@ -330,7 +330,7 @@ export function receiveViaP2p({ apiBase, transferId, aesKey, accessToken, onStat
   return cleanup;
 }
 
-export function sendViaP2p({ apiBase, sessionId, files, accessToken, aesKey, onStatus, helloTimeoutMs = 2000, confirmationTimeoutMs = 30000 }) {
+export function sendViaP2p({ apiBase, sessionId, files, accessToken, aesKey, onStatus, helloTimeoutMs = 2000, confirmationTimeoutMs = 30000, waitForPeerMs = 120000, connectionTimeoutMs = 30000 }) {
   return new Promise((resolve) => {
     let ws;
     let pc;
@@ -342,6 +342,8 @@ export function sendViaP2p({ apiBase, sessionId, files, accessToken, aesKey, onS
     let ciphertextDigest;
     let confirmationTimer;
     let helloTimer;
+    let peerTimer;
+    let connectionArmed = false;
     const expectedBytes = files.reduce((sum, file) => sum + file.blob.length, 0);
     let helloResolve;
     const helloSeen = new Promise((resolve) => {
@@ -355,6 +357,7 @@ export function sendViaP2p({ apiBase, sessionId, files, accessToken, aesKey, onS
       settled = true;
       clearTimeout(helloTimer);
       clearTimeout(confirmationTimer);
+      clearTimeout(peerTimer);
       coordinator?.dispose();
       try {
         channel?.close();
@@ -418,7 +421,7 @@ export function sendViaP2p({ apiBase, sessionId, files, accessToken, aesKey, onS
     };
 
   const coordinator = new P2pCoordinator({
-      timeoutMs: 30000,
+      timeoutMs: connectionTimeoutMs,
       onP2PFailed: () => fail("timeout"),
       actions: {
         async createOffer() {
@@ -427,6 +430,9 @@ export function sendViaP2p({ apiBase, sessionId, files, accessToken, aesKey, onS
           channel.binaryType = "arraybuffer";
           channel.onopen = () => {
             channelOpen = true;
+            connectionArmed = true;
+            clearTimeout(peerTimer);
+            peerTimer = null;
             coordinator.notifyConnected();
             onStatus?.("p2p-connected");
             sendFrames();
@@ -472,6 +478,14 @@ export function sendViaP2p({ apiBase, sessionId, files, accessToken, aesKey, onS
       },
     });
 
+    const armConnectionTimeout = () => {
+      if (settled || connectionArmed || channelOpen) return;
+      connectionArmed = true;
+      clearTimeout(peerTimer);
+      peerTimer = null;
+      coordinator.armTimeout();
+    };
+
     try {
       ws = new WebSocket(toWebSocketUrl(apiBase, sessionId));
     } catch {
@@ -480,7 +494,11 @@ export function sendViaP2p({ apiBase, sessionId, files, accessToken, aesKey, onS
     }
 
     ws.onmessage = (event) => {
-      coordinator.handleMessage(parseMessage(event.data));
+      const message = parseMessage(event.data);
+      if (message.type === "answer" || message.type === "candidate") {
+        armConnectionTimeout();
+      }
+      coordinator.handleMessage(message);
     };
     ws.onerror = () => {
       // The signaling socket is only needed for the handshake. Once the data
@@ -489,7 +507,11 @@ export function sendViaP2p({ apiBase, sessionId, files, accessToken, aesKey, onS
     };
     ws.onopen = () => {
       sendAuthFrame(ws, accessToken);
-      coordinator.start({ role: "sender" });
+      // The sender can wait for a receiver without burning the connection
+      // budget. The 30-second fuse starts when a peer answers or the data
+      // channel opens, so time spent typing a six-digit code does not count.
+      peerTimer = setTimeout(() => fail("no-receiver"), waitForPeerMs);
+      coordinator.start({ role: "sender", armTimeout: false });
     };
   });
 }
