@@ -15,12 +15,20 @@ const read = (relative) => readFileSync(join(root, relative), "utf8");
 const OLD_BRAND = /\bLynk\b(?!-)/g;
 
 const BRANDED = [
-  "index.html",
-  "app/send.html",
-  "app/receive.html",
-  "manifest.webmanifest",
-  "js/pages/send.js",
-  "js/pages/receive.js",
+  "revamp/index.html",
+  "revamp/transfer.html",
+  "revamp/about.html",
+  "revamp/how-it-works.html",
+  "revamp/faq.html",
+  "revamp/privacy.html",
+  "revamp/guides.html",
+  "revamp/guides/direct-vs-cloud.html",
+  "revamp/guides/cross-device-transfer.html",
+  "revamp/guides/receive-on-iphone.html",
+  "revamp/guides/sender-qr-vs-receiver-qr.html",
+  "revamp/guides/expired-link.html",
+  "revamp/guides/web-vs-app-limits.html",
+  "revamp/manifest.webmanifest",
 ];
 
 test("nothing on the site still calls the product Lynk", () => {
@@ -31,12 +39,11 @@ test("nothing on the site still calls the product Lynk", () => {
 });
 
 test("the site calls the product LynkShare", () => {
-  assert.ok(read("index.html").includes("<title>LynkShare"));
-  assert.ok(read("app/send.html").includes("LynkShare"));
-  assert.ok(read("app/receive.html").includes("LynkShare"));
-  assert.ok(read("manifest.webmanifest").includes('"short_name": "LynkShare"'));
+  assert.ok(read("revamp/index.html").includes("<title>LynkShare"));
+  assert.ok(read("revamp/transfer.html").includes("<title>LynkShare"));
+  assert.ok(read("revamp/manifest.webmanifest").includes('"short_name": "LynkShare"'));
 
-  for (const page of ["index.html", "app/send.html", "app/receive.html"]) {
+  for (const page of ["revamp/index.html", "revamp/transfer.html"]) {
     assert.ok(read(page).includes("LynkShare"), `${page} has no brand`);
     assert.ok(
       read(page).includes('og:site_name" content="LynkShare"'),

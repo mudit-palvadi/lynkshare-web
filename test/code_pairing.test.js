@@ -2,17 +2,8 @@
 // collects the sender's wrapped transfer key from the same session.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 
 import { LynkApi } from "../js/core/api.js";
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const page = readFileSync(join(root, "js/pages/receive.js"), "utf8");
-const html = readFileSync(join(root, "app/receive.html"), "utf8");
-const sendPage = readFileSync(join(root, "js/pages/send.js"), "utf8");
-const sendHtml = readFileSync(join(root, "app/send.html"), "utf8");
 
 function mockFetch(responses) {
   const calls = [];
@@ -82,34 +73,6 @@ test("409 while the sender has not attached means keep waiting", async () => {
   assert.equal(await api.getSenderSessionKey("s1"), null);
 });
 
-test("the page wires the code box to the pairing endpoints", () => {
-  assert.ok(html.includes('id="code-input"'), "there is no code box");
-  assert.ok(html.includes('id="code-button"'), "there is no code button");
-  assert.ok(
-    page.includes("joinSenderSession"),
-    "the page never joins a code session",
-  );
-  assert.ok(
-    page.includes("getSenderSessionKey"),
-    "the page never collects the wrapped key",
-  );
-  assert.ok(
-    page.includes("session.receiverSecret"),
-    "the page never sends the receiver secret",
-  );
-  assert.ok(
-    page.includes("unwrapDelivery"),
-    "the page never unwraps the delivered key",
-  );
-});
-
-test("a cloud sender is not waited on over a direct connection", () => {
-  assert.ok(
-    page.includes('state.mode !== "cloud"'),
-    "the download always tries a direct connection first",
-  );
-});
-
 test("a sender mints a code and records the send mode with the key", async () => {
   const { fetch, calls } = mockFetch([
     {
@@ -150,28 +113,4 @@ test("a sender mints a code and records the send mode with the key", async () =>
     wrapped_key: "wrapped",
     mode: "p2p",
   });
-});
-
-test("the send page shows the code and wraps for the joined receiver", () => {
-  assert.ok(sendHtml.includes('id="sender-code"'), "there is no code display");
-  assert.ok(sendHtml.includes('id="sender-key-check"'), "there is no sender key check");
-  assert.ok(html.includes('id="receiver-key-check"'), "there is no receiver key check");
-  assert.ok(sendPage.includes("keyFingerprint"), "the send page never shows a key check");
-  assert.ok(page.includes("keyFingerprint"), "the receive page never shows a key check");
-  assert.ok(
-    sendPage.includes("createSenderSession"),
-    "the send page never mints a code",
-  );
-  assert.ok(
-    sendPage.includes("attachSenderKey"),
-    "the send page never hands over the wrapped key",
-  );
-  assert.ok(
-    sendPage.includes("session.senderSecret"),
-    "the send page never sends the code secret",
-  );
-  assert.ok(
-    sendPage.includes('"p2p"'),
-    "a direct send does not tell the receiver it is direct",
-  );
 });

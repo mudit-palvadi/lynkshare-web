@@ -1,5 +1,5 @@
-// The revamp starts as a second build output so the live site can keep
-// serving the current documents until the new screens are ready.
+// The revamp has separate marketing and transfer entries. Both are built from
+// revamp/ by Vite and deployed to the lynk-web Worker.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
