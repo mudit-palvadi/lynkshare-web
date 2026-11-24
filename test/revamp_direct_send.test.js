@@ -114,3 +114,10 @@ test("the send screen offers Direct when the browser supports it", () => {
     false,
   );
 });
+
+test("a cloud fallback marks the result as cloud for later code pairing", () => {
+  assert.match(
+    source,
+    /current \? \{ \.\.\.current, mode: "cloud" \} : current/,
+  );
+});

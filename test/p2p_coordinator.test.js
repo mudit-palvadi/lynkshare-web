@@ -3,9 +3,13 @@ import assert from "node:assert/strict";
 import { P2pCoordinator } from "../js/core/p2p_coordinator.js";
 
 function fakeActions() {
-  const calls = { sent: [], answers: 0, candidates: [] };
+  const calls = { sent: [], answers: 0, candidates: [], offers: 0 };
   return {
     calls,
+    async createOffer() {
+      calls.offers += 1;
+      return { type: "offer", sdp: "local-offer" };
+    },
     async handleRemoteDescription(msg) {
       if (msg.type === "offer") {
         calls.answers += 1;
@@ -116,6 +120,34 @@ test("dispose stops any pending timeout from firing", () => {
     coordinator.dispose();
     mock.timers.tick(20000);
     assert.equal(failures, 0);
+  } finally {
+    mock.timers.reset();
+  }
+});
+
+test("a sender can wait for a receiver without burning the connection budget", async () => {
+  mock.timers.enable({ apis: ["setTimeout"] });
+  try {
+    const actions = fakeActions();
+    let failures = 0;
+    const coordinator = new P2pCoordinator({
+      actions,
+      onP2PFailed: () => {
+        failures += 1;
+      },
+    });
+
+    await coordinator.start({ role: "sender", armTimeout: false });
+    assert.equal(actions.calls.offers, 1);
+
+    mock.timers.tick(120000);
+    assert.equal(failures, 0, "waiting for a receiver is not a connection timeout");
+
+    coordinator.armTimeout();
+    mock.timers.tick(29999);
+    assert.equal(failures, 0);
+    mock.timers.tick(1);
+    assert.equal(failures, 1, "the connection budget starts when armed");
   } finally {
     mock.timers.reset();
   }
