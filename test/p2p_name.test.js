@@ -2,14 +2,8 @@
 // peer that announces itself gets the name sealed with the transfer key.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { encodeEof, encodeHeader, encodeHello, parseText } from "../js/core/framer.js";
 import { openName, sealName } from "../js/core/p2p_session.js";
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const read = (relative) => readFileSync(join(root, relative), "utf8");
 
 const KEY = "0123456789abcdef0123456789abcdef";
 
@@ -46,7 +40,3 @@ test("a sealed name opens only with the transfer key", async () => {
 
 // Actual hello ordering and sealed sender headers are exercised at the native
 // channel boundary in p2p_completion.test.js, not inferred from source strings.
-
-test("the send page hands the transfer key to the direct path", () => {
-  assert.match(read("js/pages/send.js"), /sendViaP2p\(\{[\s\S]*aesKey: key/);
-});

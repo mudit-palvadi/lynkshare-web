@@ -12,13 +12,15 @@ import {
 
 const MB = 1024 * 1024;
 
-const jsDir = join(dirname(fileURLToPath(import.meta.url)), "..", "js");
+const webRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+const jsDir = join(webRoot, "js");
+const siteDirs = [jsDir, join(webRoot, "revamp", "src")];
 
 function jsFiles(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) return jsFiles(full);
-    return entry.name.endsWith(".js") ? [full] : [];
+    return /\.(js|jsx)$/.test(entry.name) ? [full] : [];
   });
 }
 
@@ -101,27 +103,32 @@ test("ten small files pass and eleven are refused", () => {
 // shows can never drift from the number it enforces.
 test("no website code unlocks a paid tier", () => {
   const unlockCall = /(validateSelection|maxTotalSize)\([^)]*\btrue\b[^)]*\)/;
-  for (const file of jsFiles(jsDir)) {
-    const source = readFileSync(file, "utf8");
-    assert.equal(
-      unlockCall.test(source),
-      false,
-      `${file} unlocks a tier the website cannot earn`,
-    );
+  for (const dir of siteDirs) {
+    for (const file of jsFiles(dir)) {
+      const source = readFileSync(file, "utf8");
+      assert.equal(
+        unlockCall.test(source),
+        false,
+        `${file} unlocks a tier the website cannot earn`,
+      );
+    }
   }
 });
 
-test("the sender page validates and labels the same free-tier limit", () => {
-  const source = readFileSync(join(jsDir, "pages", "send.js"), "utf8");
+test("the sender screen validates and labels the same free-tier limit", () => {
+  const source = readFileSync(
+    join(webRoot, "revamp/src/transfer/send/SendScreen.jsx"),
+    "utf8",
+  );
 
   assert.match(
     source,
-    /validateSelection\(selectedFiles,\s*MODE,\s*false\)/,
+    /validateSelection\(files, "cloud", false, cipherVersion\)/,
     "the sender must validate against the free tier",
   );
   assert.match(
     source,
-    /maxTotalSize\("cloud",\s*false\)/,
+    /maxTotalSize\("cloud", false\)/,
     "the label must show the same limit the validation uses",
   );
 });

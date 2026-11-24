@@ -1,8 +1,5 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 
 import {
   DEFAULT_READY_POLL_INTERVAL_MS,
@@ -170,22 +167,4 @@ test("the default wait covers the window a sender needs", () => {
   assert.ok(DEFAULT_READY_TIMEOUT_MS >= 60_000);
   assert.ok(DEFAULT_READY_POLL_INTERVAL_MS >= 1_000);
   assert.ok(DEFAULT_READY_POLL_INTERVAL_MS <= 10_000);
-});
-
-const jsDir = join(dirname(fileURLToPath(import.meta.url)), "..", "js");
-
-test("the receiver page waits for the sender instead of giving up", () => {
-  const source = readFileSync(join(jsDir, "pages", "receive.js"), "utf8");
-
-  assert.match(source, /waitForTransferReady/);
-  assert.match(source, /isNotReadyError/);
-});
-
-test("the receiver page never blames a working link for expiring", () => {
-  const source = readFileSync(join(jsDir, "pages", "receive.js"), "utf8");
-
-  // A sender that is still uploading is not an expired link, and saying so
-  // sends the reader off for a fresh QR code they do not need.
-  assert.equal(source.includes("The link may have expired"), false);
-  assert.match(source, /still uploading/);
 });

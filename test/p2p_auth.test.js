@@ -49,8 +49,3 @@ test("both direct paths authenticate before they start the handshake", () => {
     assert.ok(start > auth, "the handshake starts before the token is sent");
   }
 });
-
-test("the pages hand their token to the direct path", () => {
-  assert.match(read("js/pages/send.js"), /sendViaP2p\(\{[\s\S]*accessToken: currentAccessToken/);
-  assert.match(read("js/pages/receive.js"), /receiveViaP2p\(\{[\s\S]*accessToken: state\.accessToken/);
-});

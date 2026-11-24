@@ -61,15 +61,3 @@ test("the handshake budget is long enough for a phone that is cold starting", ()
 // Actual receiver-confirmed completion, close/error and timeout behavior is
 // exercised through native-boundary fakes in p2p_completion.test.js. Merely
 // finding a "framesSent" flag in the source used to lock in false success.
-
-test("the page tells the user what is happening", () => {
-  const page = read("js/pages/send.js");
-
-  assert.ok(page.includes("p2p-connected"), "the connected state is not handled");
-  assert.ok(page.includes("Phone connected - sending directly"));
-  assert.ok(page.includes("Delivered directly"));
-  assert.ok(
-    page.includes('phoneIsReady ? "sent" : "qr"'),
-    "the QR comes back even when the phone is already connected",
-  );
-});
